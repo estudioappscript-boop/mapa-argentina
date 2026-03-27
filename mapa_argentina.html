@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Argentina</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --danger: #f85149;
+    --gold: #d29922;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    z-index: 1000;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  header .badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88,166,255,0.12);
+    border: 1px solid rgba(88,166,255,0.25);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  header .stats {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+  }
+
+  header .stat {
+    text-align: right;
+  }
+
+  header .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent2);
+  }
+
+  header .stat-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #map {
+    flex: 1;
+    background: #0d1117;
+  }
+
+  .sidebar {
+    width: 280px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .search-box {
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus {
+    border-color: var(--accent);
+  }
+
+  .search-box::before {
+    content: '⌕';
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .province-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 0;
+  }
+
+  .province-list::-webkit-scrollbar { width: 4px; }
+  .province-list::-webkit-scrollbar-track { background: transparent; }
+  .province-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .prov-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    gap: 10px;
+  }
+
+  .prov-item:hover { background: rgba(88,166,255,0.06); }
+  .prov-item.active { background: rgba(88,166,255,0.12); }
+
+  .prov-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .prov-name {
+    flex: 1;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .prov-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+
+  .legend {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .legend-title {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .legend-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #0d2137, #1a4a7a, #2563b0, #3b82f6, #58a6ff);
+    margin-bottom: 6px;
+  }
+
+  .legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* Leaflet popup override */
+  .leaflet-popup-content-wrapper {
+    background: #1c2128 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+    color: #e6edf3 !important;
+    padding: 0 !important;
+  }
+
+  .leaflet-popup-tip { background: #1c2128 !important; }
+  .leaflet-popup-content { margin: 0 !important; }
+
+  .popup-inner { padding: 14px 16px; min-width: 180px; }
+
+  .popup-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    color: #e6edf3;
+  }
+
+  .popup-province {
+    font-size: 0.75rem;
+    color: #8b949e;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .popup-kv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    padding: 4px 0;
+    border-top: 1px solid #30363d;
+  }
+
+  .popup-key { color: #8b949e; }
+  .popup-val { font-weight: 600; color: #58a6ff; font-family: 'Syne', sans-serif; }
+
+  .leaflet-container { background: #0d1117 !important; }
+
+  .info-panel {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 900;
+    background: rgba(22,27,34,0.92);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    backdrop-filter: blur(8px);
+    min-width: 200px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .info-panel.visible { opacity: 1; }
+  .info-panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .info-panel-value { font-size: 0.85rem; color: var(--muted); }
+  .info-panel-val-num { color: var(--accent); font-weight: 600; }
+
+  .toggle-cities {
+    position: absolute;
+    bottom: 24px;
+    left: 12px;
+    z-index: 900;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-cities:hover { border-color: var(--accent); color: var(--accent); }
+  .toggle-cities.off { opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺 Argentina · Mapa Interactivo</h1>
+  <span class="badge">Demo</span>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="stat-cities">368</div>
+      <div class="stat-label">Ciudades</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">24</div>
+      <div class="stat-label">Provincias</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map">
+    <div class="info-panel" id="info-panel">
+      <div class="info-panel-title" id="info-title"></div>
+      <div class="info-panel-value">Valor: <span class="info-panel-val-num" id="info-value"></span></div>
+    </div>
+    <button class="toggle-cities" id="toggle-btn" onclick="toggleCities()">🏙 Ocultar ciudades</button>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Provincias</h2>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Buscar provincia..." oninput="filterProvincias()">
+      </div>
+    </div>
+    <div class="province-list" id="province-list"></div>
+    <div class="legend">
+      <div class="legend-title">Escala de valores</div>
+      <div class="legend-bar"></div>
+      <div class="legend-labels">
+        <span id="leg-min">0</span>
+        <span id="leg-max">100</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// 🔧 TU DATASET - Reemplazá estos valores con los tuyos
+// Usá los mismos nombres que en tu archivo JSON (sin tildes si sacaste las tildes)
+// ─────────────────────────────────────────────
+const DATOS_PROVINCIAS = {
+  "Buenos Aires":        87,
+  "Catamarca":           23,
+  "Chaco":               41,
+  "Chubut":              18,
+  "Ciudad de Buenos Aires": 95,
+  "Cordoba":             76,
+  "Corrientes":          38,
+  "Entre Rios":          44,
+  "Formosa":             15,
+  "Jujuy":               29,
+  "La Pampa":            12,
+  "La Rioja":            21,
+  "Mendoza":             63,
+  "Misiones":            47,
+  "Neuquen":             34,
+  "Rio Negro":           27,
+  "Salta":               52,
+  "San Juan":            31,
+  "San Luis":            25,
+  "Santa Cruz":          10,
+  "Santa Fe":            71,
+  "Santiago del Estero": 33,
+  "Tierra del Fuego":     8,
+  "Tucuman":             58,
+};
+
+const LABEL_VALOR = "Índice"; // Nombre de tu métrica
+// ─────────────────────────────────────────────
+
+// Ciudades principales de Argentina con coordenadas
+const CIUDADES = [
+  {ciudad:"Buenos Aires",prov:"Buenos Aires",lat:-34.6037,lng:-58.3816,pop:16710000},
+  {ciudad:"Córdoba",prov:"Cordoba",lat:-31.4167,lng:-64.1833,pop:1537000},
+  {ciudad:"Rosario",prov:"Santa Fe",lat:-32.9468,lng:-60.6393,pop:1276000},
+  {ciudad:"Mendoza",prov:"Mendoza",lat:-32.8833,lng:-68.8167,pop:1007000},
+  {ciudad:"San Miguel de Tucumán",prov:"Tucuman",lat:-26.8083,lng:-65.2176,pop:869000},
+  {ciudad:"La Plata",prov:"Buenos Aires",lat:-34.9206,lng:-57.9547,pop:852000},
+  {ciudad:"Mar del Plata",prov:"Buenos Aires",lat:-38.0,lng:-57.5333,pop:680000},
+  {ciudad:"Salta",prov:"Salta",lat:-24.7833,lng:-65.4167,pop:619000},
+  {ciudad:"Santa Fe",prov:"Santa Fe",lat:-31.6333,lng:-60.7,pop:491000},
+  {ciudad:"San Juan",prov:"San Juan",lat:-31.5333,lng:-68.5167,pop:470000},
+  {ciudad:"Resistencia",prov:"Chaco",lat:-27.4513,lng:-58.9861,pop:424000},
+  {ciudad:"Santiago del Estero",prov:"Santiago del Estero",lat:-27.7833,lng:-64.2667,pop:409000},
+  {ciudad:"Corrientes",prov:"Corrientes",lat:-27.4806,lng:-58.8341,pop:390000},
+  {ciudad:"Posadas",prov:"Misiones",lat:-27.3667,lng:-55.9,pop:368000},
+  {ciudad:"Neuquén",prov:"Neuquen",lat:-38.9516,lng:-68.0591,pop:358000},
+  {ciudad:"Bahía Blanca",prov:"Buenos Aires",lat:-38.7196,lng:-62.2724,pop:336000},
+  {ciudad:"San Salvador de Jujuy",prov:"Jujuy",lat:-24.1858,lng:-65.2995,pop:318000},
+  {ciudad:"Paraná",prov:"Entre Rios",lat:-31.7333,lng:-60.5333,pop:312000},
+  {ciudad:"Formosa",prov:"Formosa",lat:-26.1775,lng:-58.1781,pop:295000},
+  {ciudad:"San Luis",prov:"San Luis",lat:-33.2958,lng:-66.3356,pop:250000},
+  {ciudad:"La Rioja",prov:"La Rioja",lat:-29.4131,lng:-66.8558,pop:216000},
+  {ciudad:"Río Cuarto",prov:"Cordoba",lat:-33.1307,lng:-64.3499,pop:195000},
+  {ciudad:"Comodoro Rivadavia",prov:"Chubut",lat:-45.8645,lng:-67.4953,pop:185000},
+  {ciudad:"Catamarca",prov:"Catamarca",lat:-28.4696,lng:-65.7795,pop:183000},
+  {ciudad:"Concordia",prov:"Entre Rios",lat:-31.3901,lng:-58.0204,pop:166000},
+  {ciudad:"Tandil",prov:"Buenos Aires",lat:-37.3167,lng:-59.1333,pop:159000},
+  {ciudad:"Santa Rosa",prov:"La Pampa",lat:-36.6167,lng:-64.2833,pop:131000},
+  {ciudad:"Viedma",prov:"Rio Negro",lat:-40.8135,lng:-62.9967,pop:79000},
+  {ciudad:"Rawson",prov:"Chubut",lat:-43.3002,lng:-65.1023,pop:36000},
+  {ciudad:"Ushuaia",prov:"Tierra del Fuego",lat:-54.8,lng:-68.3,pop:82000},
+  {ciudad:"Río Gallegos",prov:"Santa Cruz",lat:-51.6226,lng:-69.2181,pop:103000},
+  {ciudad:"San Carlos de Bariloche",prov:"Rio Negro",lat:-41.1333,lng:-71.3,pop:140000},
+  {ciudad:"Villa Carlos Paz",prov:"Cordoba",lat:-31.4231,lng:-64.4977,pop:79000},
+  {ciudad:"Quilmes",prov:"Buenos Aires",lat:-34.7215,lng:-58.2537,pop:582000},
+  {ciudad:"Lomas de Zamora",prov:"Buenos Aires",lat:-34.7565,lng:-58.4031,pop:616000},
+  {ciudad:"San Martín (GBA)",prov:"Buenos Aires",lat:-34.5749,lng:-58.5366,pop:425000},
+  {ciudad:"Tigre",prov:"Buenos Aires",lat:-34.4258,lng:-58.5796,pop:376000},
+  {ciudad:"Merlo",prov:"Buenos Aires",lat:-34.6633,lng:-58.7264,pop:528000},
+  {ciudad:"Moreno",prov:"Buenos Aires",lat:-34.6497,lng:-58.7897,pop:452000},
+  {ciudad:"Florencio Varela",prov:"Buenos Aires",lat:-34.8074,lng:-58.2749,pop:427000},
+  {ciudad:"Berazategui",prov:"Buenos Aires",lat:-34.7636,lng:-58.2119,pop:344000},
+  {ciudad:"Almirante Brown",prov:"Buenos Aires",lat:-34.8333,lng:-58.3833,pop:548000},
+  {ciudad:"Lanús",prov:"Buenos Aires",lat:-34.7002,lng:-58.3985,pop:459000},
+  {ciudad:"Avellaneda",prov:"Buenos Aires",lat:-34.6631,lng:-58.3636,pop:342000},
+  {ciudad:"Tres de Febrero",prov:"Buenos Aires",lat:-34.6,lng:-58.5667,pop:340000},
+  {ciudad:"Pergamino",prov:"Buenos Aires",lat:-33.8882,lng:-60.5623,pop:109000},
+  {ciudad:"Junín",prov:"Buenos Aires",lat:-34.5919,lng:-60.9463,pop:103000},
+  {ciudad:"Campana",prov:"Buenos Aires",lat:-34.1644,lng:-58.9556,pop:97000},
+  {ciudad:"Zárate",prov:"Buenos Aires",lat:-34.0981,lng:-59.0293,pop:95000},
+  {ciudad:"Azul",prov:"Buenos Aires",lat:-36.7768,lng:-59.8578,pop:65000},
+  {ciudad:"Olavarría",prov:"Buenos Aires",lat:-36.8927,lng:-60.3227,pop:104000},
+  {ciudad:"Necochea",prov:"Buenos Aires",lat:-38.5539,lng:-58.7381,pop:93000},
+  {ciudad:"Villa María",prov:"Cordoba",lat:-32.4074,lng:-63.2436,pop:96000},
+  {ciudad:"San Francisco",prov:"Cordoba",lat:-31.4278,lng:-62.0819,pop:65000},
+  {ciudad:"Rafaela",prov:"Santa Fe",lat:-31.2521,lng:-61.4895,pop:105000},
+  {ciudad:"Venado Tuerto",prov:"Santa Fe",lat:-33.7455,lng:-61.9664,pop:83000},
+  {ciudad:"Reconquista",prov:"Santa Fe",lat:-29.1458,lng:-59.6468,pop:80000},
+  {ciudad:"Oberá",prov:"Misiones",lat:-27.4888,lng:-55.1208,pop:75000},
+  {ciudad:"El Dorado",prov:"Misiones",lat:-26.3973,lng:-54.6063,pop:75000},
+  {ciudad:"General Roca",prov:"Rio Negro",lat:-39.0333,lng:-67.5833,pop:90000},
+  {ciudad:"Cipolletti",prov:"Rio Negro",lat:-38.9333,lng:-68.0,pop:89000},
+  {ciudad:"Trelew",prov:"Chubut",lat:-43.2493,lng:-65.3085,pop:115000},
+  {ciudad:"Puerto Madryn",prov:"Chubut",lat:-42.7682,lng:-65.0317,pop:100000},
+  {ciudad:"Tartagal",prov:"Salta",lat:-22.5211,lng:-63.7997,pop:80000},
+  {ciudad:"Orán",prov:"Salta",lat:-23.1337,lng:-64.3216,pop:80000},
+  {ciudad:"Goya",prov:"Corrientes",lat:-29.1423,lng:-59.2631,pop:82000},
+  {ciudad:"Curuzú Cuatiá",prov:"Corrientes",lat:-29.7938,lng:-58.0517,pop:37000},
+  {ciudad:"Ledesma",prov:"Jujuy",lat:-23.8,lng:-64.7833,pop:40000},
+  {ciudad:"Libertador General San Martín",prov:"Jujuy",lat:-23.8,lng:-64.7833,pop:35000},
+  {ciudad:"San Pedro de Jujuy",prov:"Jujuy",lat:-24.2333,lng:-64.8667,pop:70000},
+  {ciudad:"Villa Mercedes",prov:"San Luis",lat:-33.6738,lng:-65.4632,pop:110000},
+  {ciudad:"Río Tercero",prov:"Cordoba",lat:-32.1735,lng:-64.1116,pop:52000},
+  {ciudad:"Alta Gracia",prov:"Cordoba",lat:-31.6552,lng:-64.4296,pop:54000},
+  {ciudad:"Cruz del Eje",prov:"Cordoba",lat:-30.7264,lng:-64.8027,pop:34000},
+  {ciudad:"Dean Funes",prov:"Cordoba",lat:-30.4225,lng:-64.3483,pop:22000},
+  {ciudad:"Chilecito",prov:"La Rioja",lat:-29.1619,lng:-67.4982,pop:45000},
+  {ciudad:"Tinogasta",prov:"Catamarca",lat:-28.0652,lng:-67.5675,pop:14000},
+  {ciudad:"Andalgalá",prov:"Catamarca",lat:-27.5996,lng:-66.3125,pop:15000},
+  {ciudad:"Bella Vista",prov:"Corrientes",lat:-28.5032,lng:-59.0442,pop:35000},
+  {ciudad:"Mercedes",prov:"Corrientes",lat:-29.1821,lng:-58.0775,pop:40000},
+  {ciudad:"Paso de los Libres",prov:"Corrientes",lat:-29.7128,lng:-57.0852,pop:44000},
+  {ciudad:"Santo Tomé",prov:"Corrientes",lat:-28.5518,lng:-56.0418,pop:24000},
+  {ciudad:"General Pico",prov:"La Pampa",lat:-35.6565,lng:-63.7569,pop:65000},
+  {ciudad:"Chos Malal",prov:"Neuquen",lat:-37.3783,lng:-70.2688,pop:14000},
+  {ciudad:"Cutral-Có",prov:"Neuquen",lat:-38.9333,lng:-69.2333,pop:50000},
+  {ciudad:"Zapala",prov:"Neuquen",lat:-38.9,lng:-70.0667,pop:40000},
+  {ciudad:"San Antonio Oeste",prov:"Rio Negro",lat:-40.7333,lng:-65.0,pop:22000},
+  {ciudad:"Esquel",prov:"Chubut",lat:-42.9104,lng:-71.3176,pop:39000},
+  {ciudad:"Caleta Olivia",prov:"Santa Cruz",lat:-46.4401,lng:-67.5215,pop:57000},
+  {ciudad:"Pico Truncado",prov:"Santa Cruz",lat:-46.7911,lng:-68.0,pop:20000},
+  {ciudad:"Puerto Deseado",prov:"Santa Cruz",lat:-47.75,lng:-65.9,pop:17000},
+  {ciudad:"Tolhuin",prov:"Tierra del Fuego",lat:-54.5,lng:-67.2,pop:7000},
+  {ciudad:"Río Grande",prov:"Tierra del Fuego",lat:-53.7879,lng:-67.7073,pop:80000},
+];
+
+// Setup mapa
+const map = L.map('map', {
+  center: [-38, -65],
+  zoom: 4,
+  zoomControl: true,
+  attributionControl: false,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_only_labels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+}).addTo(map);
+
+// Calcular rango de valores
+const valores = Object.values(DATOS_PROVINCIAS);
+const minVal = Math.min(...valores);
+const maxVal = Math.max(...valores);
+
+document.getElementById('leg-min').textContent = minVal;
+document.getElementById('leg-max').textContent = maxVal;
+
+function getColor(val) {
+  if (val === undefined) return '#2a2a2a';
+  const t = (val - minVal) / (maxVal - minVal || 1);
+  const r = Math.round(13 + t * (88 - 13));
+  const g = Math.round(33 + t * (166 - 33));
+  const b = Math.round(23 + t * (255 - 23));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Cargar GeoJSON desde la copia local embebida (TopoJSON → convertido inline)
+// Usamos el archivo que el usuario ya tiene
+const GEO_URL = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/argentina-states.geojson';
+
+let geojsonLayer;
+let provinceLayers = {};
+
+fetch(GEO_URL)
+  .then(r => r.json())
+  .then(data => {
+    geojsonLayer = L.geoJSON(data, {
+      style: feature => {
+        const name = feature.properties.name || feature.properties.NAME_1 || '';
+        const val = DATOS_PROVINCIAS[name];
+        return {
+          fillColor: getColor(val),
+          fillOpacity: 0.75,
+          color: '#58a6ff',
+          weight: 1,
+          opacity: 0.4,
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.name || feature.properties.NAME_1 || '';
+        provinceLayers[name] = layer;
+
+        layer.on('mouseover', function(e) {
+          this.setStyle({ weight: 2, opacity: 0.9, fillOpacity: 0.9 });
+          const val = DATOS_PROVINCIAS[name];
+          document.getElementById('info-title').textContent = name;
+          document.getElementById('info-value').textContent = val !== undefined ? val : 'Sin datos';
+          document.getElementById('info-panel').classList.add('visible');
+          highlightSidebar(name);
+        });
+
+        layer.on('mouseout', function(e) {
+          geojsonLayer.resetStyle(this);
+          document.getElementById('info-panel').classList.remove('visible');
+          highlightSidebar(null);
+        });
+
+        layer.on('click', function(e) {
+          map.fitBounds(this.getBounds(), { padding: [40, 40] });
+        });
+      }
+    }).addTo(map);
+
+    buildSidebar(data);
+  })
+  .catch(() => {
+    document.getElementById('map').insertAdjacentHTML('afterbegin',
+      '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8b949e;text-align:center;z-index:999;">' +
+      '<div style="font-size:2rem;margin-bottom:8px;">🌐</div>' +
+      '<div style="font-family:Syne,sans-serif;font-weight:700;">Necesitás conexión a internet</div>' +
+      '<div style="font-size:0.8rem;margin-top:4px;">para cargar las provincias</div></div>');
+  });
+
+// Ciudades
+let citiesVisible = true;
+let cityMarkers = [];
+
+CIUDADES.forEach(c => {
+  const r = Math.max(4, Math.min(14, Math.log(c.pop / 5000) * 1.5));
+  const marker = L.circleMarker([c.lat, c.lng], {
+    radius: r,
+    fillColor: '#f0c060',
+    color: '#0d1117',
+    weight: 1.5,
+    fillOpacity: 0.85,
+  });
+
+  const val = DATOS_PROVINCIAS[c.prov];
+  marker.bindPopup(`
+    <div class="popup-inner">
+      <div class="popup-title">${c.ciudad}</div>
+      <div class="popup-province">${c.prov}</div>
+      <div class="popup-kv">
+        <span class="popup-key">Población</span>
+        <span class="popup-val">${c.pop.toLocaleString('es-AR')}</span>
+      </div>
+      <div class="popup-kv">
+        <span class="popup-key">${LABEL_VALOR} (provincia)</span>
+        <span class="popup-val">${val !== undefined ? val : '—'}</span>
+      </div>
+    </div>
+  `, { maxWidth: 240 });
+
+  marker.addTo(map);
+  cityMarkers.push(marker);
+});
+
+function toggleCities() {
+  citiesVisible = !citiesVisible;
+  const btn = document.getElementById('toggle-btn');
+  cityMarkers.forEach(m => {
+    if (citiesVisible) m.addTo(map);
+    else map.removeLayer(m);
+  });
+  btn.textContent = citiesVisible ? '🏙 Ocultar ciudades' : '🏙 Mostrar ciudades';
+  btn.classList.toggle('off', !citiesVisible);
+}
+
+// Sidebar
+function buildSidebar(data) {
+  const container = document.getElementById('province-list');
+  const sorted = Object.entries(DATOS_PROVINCIAS).sort((a,b) => b[1]-a[1]);
+
+  sorted.forEach(([name, val]) => {
+    const item = document.createElement('div');
+    item.className = 'prov-item';
+    item.dataset.name = name;
+    item.innerHTML = `
+      <div class="prov-dot" style="background:${getColor(val)}"></div>
+      <span class="prov-name">${name}</span>
+      <span class="prov-value">${val}</span>
+    `;
+    item.onclick = () => {
+      const layer = provinceLayers[name];
+      if (layer) {
+        map.fitBounds(layer.getBounds(), { padding: [60, 60] });
+        document.querySelectorAll('.prov-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      }
+    };
+    container.appendChild(item);
+  });
+}
+
+function highlightSidebar(name) {
+  document.querySelectorAll('.prov-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.name === name);
+    if (i.dataset.name === name) i.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+function filterProvincias() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  document.querySelectorAll('.prov-item').forEach(i => {
+    i.style.display = i.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
