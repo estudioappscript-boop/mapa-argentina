@@ -4,654 +4,235 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa Argentina</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
-    --accent: #58a6ff;
-    --accent2: #3fb950;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --danger: #f85149;
-    --gold: #d29922;
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  header {
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-    z-index: 1000;
-  }
-
-  header h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 1.1rem;
-    letter-spacing: 0.04em;
-    color: var(--text);
-  }
-
-  header .badge {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: rgba(88,166,255,0.12);
-    border: 1px solid rgba(88,166,255,0.25);
-    padding: 2px 8px;
-    border-radius: 20px;
-  }
-
-  header .stats {
-    margin-left: auto;
-    display: flex;
-    gap: 20px;
-  }
-
-  header .stat {
-    text-align: right;
-  }
-
-  header .stat-value {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--accent2);
-  }
-
-  header .stat-label {
-    font-size: 0.68rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  #map {
-    flex: 1;
-    background: #0d1117;
-  }
-
-  .sidebar {
-    width: 280px;
-    background: var(--surface);
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  .sidebar-header {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-header h2 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .search-box {
-    position: relative;
-  }
-
-  .search-box input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 7px 10px 7px 30px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .search-box input:focus {
-    border-color: var(--accent);
-  }
-
-  .search-box::before {
-    content: '⌕';
-    position: absolute;
-    left: 9px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 1rem;
-    pointer-events: none;
-  }
-
-  .province-list {
-    overflow-y: auto;
-    flex: 1;
-    padding: 8px 0;
-  }
-
-  .province-list::-webkit-scrollbar { width: 4px; }
-  .province-list::-webkit-scrollbar-track { background: transparent; }
-  .province-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .prov-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    cursor: pointer;
-    transition: background 0.15s;
-    gap: 10px;
-  }
-
-  .prov-item:hover { background: rgba(88,166,255,0.06); }
-  .prov-item.active { background: rgba(88,166,255,0.12); }
-
-  .prov-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .prov-name {
-    flex: 1;
-    font-size: 0.82rem;
-    color: var(--text);
-  }
-
-  .prov-value {
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: var(--accent);
-  }
-
-  .legend {
-    padding: 14px 16px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .legend-title {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .legend-bar {
-    height: 8px;
-    border-radius: 4px;
-    background: linear-gradient(to right, #0d2137, #1a4a7a, #2563b0, #3b82f6, #58a6ff);
-    margin-bottom: 6px;
-  }
-
-  .legend-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-
-  /* Leaflet popup override */
-  .leaflet-popup-content-wrapper {
-    background: #1c2128 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 8px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
-    color: #e6edf3 !important;
-    padding: 0 !important;
-  }
-
-  .leaflet-popup-tip { background: #1c2128 !important; }
-  .leaflet-popup-content { margin: 0 !important; }
-
-  .popup-inner { padding: 14px 16px; min-width: 180px; }
-
-  .popup-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
-    color: #e6edf3;
-  }
-
-  .popup-province {
-    font-size: 0.75rem;
-    color: #8b949e;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .popup-kv {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.82rem;
-    padding: 4px 0;
-    border-top: 1px solid #30363d;
-  }
-
-  .popup-key { color: #8b949e; }
-  .popup-val { font-weight: 600; color: #58a6ff; font-family: 'Syne', sans-serif; }
-
-  .leaflet-container { background: #0d1117 !important; }
-
-  .info-panel {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 900;
-    background: rgba(22,27,34,0.92);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    backdrop-filter: blur(8px);
-    min-width: 200px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .info-panel.visible { opacity: 1; }
-  .info-panel-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
-  .info-panel-value { font-size: 0.85rem; color: var(--muted); }
-  .info-panel-val-num { color: var(--accent); font-weight: 600; }
-
-  .toggle-cities {
-    position: absolute;
-    bottom: 24px;
-    left: 12px;
-    z-index: 900;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 7px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .toggle-cities:hover { border-color: var(--accent); color: var(--accent); }
-  .toggle-cities.off { opacity: 0.5; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--border:#30363d;
+  --accent:#58a6ff;--accent2:#3fb950;--text:#e6edf3;--muted:#8b949e;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{padding:12px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+header h1{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.badge{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);padding:2px 8px;border-radius:20px}
+.stats{margin-left:auto;display:flex;gap:18px}
+.stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--accent2);text-align:right}
+.stat-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:right}
+.main{display:flex;flex:1;overflow:hidden}
+#mapwrap{flex:1;overflow:hidden;position:relative;cursor:grab}
+#mapwrap:active{cursor:grabbing}
+svg#map{width:100%;height:100%;display:block}
+.prov-path{transition:opacity .15s}
+.prov-path:hover{opacity:.85;stroke-width:1.5}
+.city-dot{cursor:pointer;transition:r .15s}
+.city-dot:hover{stroke-width:2}
+.sidebar{width:270px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sb-head{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.sb-head h2{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.search-box{position:relative}
+.search-box input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px 6px 28px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;outline:none}
+.search-box input:focus{border-color:var(--accent)}
+.search-box::before{content:"⌕";position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.95rem;pointer-events:none}
+.prov-list{overflow-y:auto;flex:1;padding:6px 0}
+.prov-list::-webkit-scrollbar{width:3px}
+.prov-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.prov-item{display:flex;align-items:center;padding:7px 14px;cursor:pointer;transition:background .12s;gap:9px}
+.prov-item:hover{background:rgba(88,166,255,.06)}
+.prov-item.active{background:rgba(88,166,255,.13)}
+.prov-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.prov-name{flex:1;font-size:.8rem}
+.prov-val{font-family:'Syne',sans-serif;font-weight:600;font-size:.8rem;color:var(--accent)}
+.legend{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.legend-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.legend-bar{height:7px;border-radius:4px;background:linear-gradient(to right,#0a2540,#1a4a8a,#2e6fc4,#58a6ff);margin-bottom:5px}
+.legend-labels{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)}
+#tooltip{position:fixed;pointer-events:none;background:#1c2128;border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:.82rem;z-index:999;opacity:0;transition:opacity .15s;min-width:160px}
+#tooltip .tt-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;margin-bottom:2px}
+#tooltip .tt-sub{color:var(--muted);font-size:.72rem;margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--border);padding-top:5px;margin-top:2px}
+#tooltip .tt-key{color:var(--muted)}
+#tooltip .tt-val{font-weight:600;color:var(--accent);font-family:'Syne',sans-serif}
+.btn-toggle{position:absolute;bottom:16px;left:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--text);cursor:pointer;z-index:10}
+.btn-toggle:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
-
 <header>
-  <h1>🗺 Argentina · Mapa Interactivo</h1>
+  <h1>🗺 Argentina &middot; Mapa Interactivo</h1>
   <span class="badge">Demo</span>
   <div class="stats">
-    <div class="stat">
-      <div class="stat-value" id="stat-cities">368</div>
-      <div class="stat-label">Ciudades</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">24</div>
-      <div class="stat-label">Provincias</div>
-    </div>
+    <div class="stat"><div class="stat-value">37</div><div class="stat-label">Ciudades</div></div>
+    <div class="stat"><div class="stat-value">24</div><div class="stat-label">Provincias</div></div>
   </div>
 </header>
-
 <div class="main">
-  <div id="map">
-    <div class="info-panel" id="info-panel">
-      <div class="info-panel-title" id="info-title"></div>
-      <div class="info-panel-value">Valor: <span class="info-panel-val-num" id="info-value"></span></div>
-    </div>
-    <button class="toggle-cities" id="toggle-btn" onclick="toggleCities()">🏙 Ocultar ciudades</button>
+  <div id="mapwrap">
+    <svg id="map" viewBox="0 0 660 860" xmlns="http://www.w3.org/2000/svg">
+      <g id="provinces"></g>
+      <g id="cities"></g>
+    </svg>
+    <button class="btn-toggle" id="btn-cities" onclick="toggleCities()">🏙 Ocultar ciudades</button>
   </div>
   <div class="sidebar">
-    <div class="sidebar-header">
+    <div class="sb-head">
       <h2>Provincias</h2>
-      <div class="search-box">
-        <input type="text" id="search-input" placeholder="Buscar provincia..." oninput="filterProvincias()">
-      </div>
+      <div class="search-box"><input type="text" id="search" placeholder="Buscar..." oninput="filterList()"></div>
     </div>
-    <div class="province-list" id="province-list"></div>
+    <div class="prov-list" id="prov-list"></div>
     <div class="legend">
       <div class="legend-title">Escala de valores</div>
       <div class="legend-bar"></div>
-      <div class="legend-labels">
-        <span id="leg-min">0</span>
-        <span id="leg-max">100</span>
-      </div>
+      <div class="legend-labels"><span id="leg-min">0</span><span id="leg-max">100</span></div>
     </div>
   </div>
 </div>
+<div id="tooltip"></div>
 
 <script>
-// ─────────────────────────────────────────────
-// 🔧 TU DATASET - Reemplazá estos valores con los tuyos
-// Usá los mismos nombres que en tu archivo JSON (sin tildes si sacaste las tildes)
-// ─────────────────────────────────────────────
-const DATOS_PROVINCIAS = {
-  "Buenos Aires":        87,
-  "Catamarca":           23,
-  "Chaco":               41,
-  "Chubut":              18,
-  "Ciudad de Buenos Aires": 95,
-  "Cordoba":             76,
-  "Corrientes":          38,
-  "Entre Rios":          44,
-  "Formosa":             15,
-  "Jujuy":               29,
-  "La Pampa":            12,
-  "La Rioja":            21,
-  "Mendoza":             63,
-  "Misiones":            47,
-  "Neuquen":             34,
-  "Rio Negro":           27,
-  "Salta":               52,
-  "San Juan":            31,
-  "San Luis":            25,
-  "Santa Cruz":          10,
-  "Santa Fe":            71,
-  "Santiago del Estero": 33,
-  "Tierra del Fuego":     8,
-  "Tucuman":             58,
+// ── TUS DATOS ── reemplazá los valores con los reales ──────────────────
+const DATOS = {
+  "Buenos Aires":87,"Catamarca":23,"Chaco":41,"Chubut":18,
+  "Ciudad de Buenos Aires":95,"Córdoba":76,"Corrientes":38,
+  "Entre Ríos":44,"Formosa":15,"Jujuy":29,"La Pampa":12,
+  "La Rioja":21,"Mendoza":63,"Misiones":47,"Neuquén":34,
+  "Río Negro":27,"Salta":52,"San Juan":31,"San Luis":25,
+  "Santa Cruz":10,"Santa Fe":71,"Santiago del Estero":33,
+  "Tierra del Fuego":8,"Tucumán":58
 };
+const LABEL = "Índice"; // nombre de tu métrica
+// ──────────────────────────────────────────────────────────────────────
 
-const LABEL_VALOR = "Índice"; // Nombre de tu métrica
-// ─────────────────────────────────────────────
+const PATHS = [{"name": "Buenos Aires", "d": "M396.3,462.2 L396.3,462.2ZM396.3,462.1 L396.3,462.1ZM395.5,457.3 L395.5,457.3ZM395.1,457.2 L395.1,457.2ZM398.9,455.1 L398.9,455.1ZM398.7,455.0 L398.7,455.0ZM397.2,454.4 L397.2,454.4ZM397.2,454.3 L397.2,454.3ZM398.9,454.0 L398.9,454.0ZM396.8,453.8 L396.8,453.8ZM398.0,453.2 L398.0,453.2ZM396.8,453.7 L396.8,453.7ZM396.6,453.7 L396.6,453.7ZM396.5,453.5 L396.5,453.5ZM396.1,453.4 L396.1,453.4ZM395.9,453.2 L395.9,453.2ZM393.3,464.2 L393.3,464.2ZM395.1,458.8 L395.1,458.8ZM393.5,459.1 L393.5,459.1ZM392.7,459.1 L392.7,459.1ZM391.3,455.8 L391.3,455.8ZM391.9,455.7 L391.9,455.7ZM391.9,455.6 L391.9,455.6ZM391.2,455.4 L391.2,455.4ZM392.4,459.0 L392.4,459.0ZM393.8,457.0 L393.8,457.0ZM393.7,447.7 L393.7,447.7ZM392.1,446.2 L392.1,446.2ZM391.4,455.2 L391.4,455.2ZM391.7,447.1 L391.7,447.1ZM391.1,446.4 L391.1,446.4ZM392.0,446.2 L392.0,446.2ZM396.9,453.6 L396.9,453.6ZM398.6,453.4 L398.6,453.4ZM398.5,452.4 L398.5,452.4ZM397.5,452.2 L397.5,452.2ZM398.1,452.3 L398.1,452.3ZM397.1,452.2 L397.1,452.2ZM398.9,452.0 L398.9,452.0ZM398.1,451.9 L398.1,451.9ZM396.5,452.8 L396.5,452.8ZM396.6,452.7 L396.6,452.7ZM395.0,452.0 L395.0,452.0ZM396.0,450.4 L396.0,450.4ZM397.7,451.8 L397.7,451.8ZM397.7,451.6 L397.7,451.6ZM397.6,451.4 L397.6,451.4ZM396.6,450.7 L396.6,450.7ZM396.2,450.6 L396.2,450.6ZM396.3,450.5 L396.3,450.5ZM395.4,447.7 L395.4,447.7ZM396.5,447.0 L396.5,447.0ZM393.8,445.5 L393.8,445.5ZM392.9,444.3 L392.9,444.3ZM392.2,444.6 L392.2,444.6ZM392.5,444.5 L392.5,444.5ZM396.0,445.0 L396.0,445.0ZM393.8,445.5 L393.8,445.5ZM394.4,443.8 L394.4,443.8ZM394.2,443.6 L394.2,443.6ZM392.8,444.0 L392.8,444.0ZM392.4,443.9 L392.4,443.9ZM393.1,443.9 L393.1,443.9ZM393.8,443.6 L393.8,443.6ZM367.9,475.1 L367.9,475.1ZM385.8,456.7 L385.8,456.7ZM385.0,455.6 L385.0,455.6ZM382.2,455.5 L382.2,455.5ZM388.5,457.6 L388.5,457.6ZM389.1,457.6 L389.1,457.6ZM389.6,457.5 L389.6,457.5ZM388.8,457.4 L388.8,457.4ZM383.8,455.5 L383.8,455.5ZM383.1,455.2 L383.1,455.2ZM384.3,454.9 L384.3,454.9ZM388.2,452.0 L388.2,452.0ZM389.6,457.2 L389.6,457.2ZM389.4,457.0 L389.4,457.0ZM389.3,453.6 L389.3,453.6ZM388.5,449.6 L388.5,449.6ZM390.6,463.7 L390.6,463.7ZM387.6,461.4 L387.6,461.4ZM389.9,457.4 L389.9,457.4ZM389.9,457.0 L389.9,457.0ZM390.9,456.6 L390.9,456.6ZM390.8,456.5 L390.8,456.5ZM391.4,456.4 L391.4,456.4ZM391.6,456.2 L391.6,456.2ZM389.7,457.0 L389.7,457.0ZM390.3,456.9 L390.3,456.9ZM390.5,456.7 L390.5,456.7ZM390.4,455.5 L390.4,455.5ZM389.8,455.0 L389.8,455.0ZM390.5,451.9 L390.5,451.9ZM390.7,449.2 L390.7,449.2ZM390.3,447.9 L390.3,447.9ZM389.5,449.0 L389.5,449.0ZM389.3,447.9 L389.3,447.9ZM389.5,447.2 L389.5,447.2ZM389.3,446.8 L389.3,446.8ZM390.2,446.8 L390.2,446.8ZM390.8,446.5 L390.8,446.5ZM389.9,446.5 L389.9,446.5ZM390.3,446.6 L390.3,446.6ZM390.3,446.1 L390.3,446.1ZM390.0,444.8 L390.0,444.8ZM389.7,444.1 L389.7,444.1ZM390.1,444.0 L390.1,444.0ZM391.5,444.9 L391.5,444.9ZM390.6,444.7 L390.6,444.7ZM390.9,444.6 L390.9,444.6ZM390.7,444.0 L390.7,444.0ZM387.4,452.0 L387.4,452.0ZM388.0,452.0 L388.0,452.0ZM368.1,475.0 L368.1,475.0ZM387.6,448.2 L387.6,448.2ZM389.4,446.8 L389.4,446.8ZM388.4,446.6 L388.4,446.6ZM389.5,445.5 L389.5,445.5ZM388.8,444.5 L388.8,444.5ZM389.8,443.3 L389.8,443.3ZM389.6,426.7 L389.6,426.7ZM388.9,422.8 L388.9,422.8ZM388.3,418.7 L388.3,418.7ZM388.0,446.4 L388.0,446.4ZM387.5,445.0 L387.5,445.0ZM387.6,444.6 L387.6,444.6ZM390.4,444.0 L390.4,444.0ZM389.9,443.8 L389.9,443.8ZM389.9,443.4 L389.9,443.4ZM390.4,428.6 L390.4,428.6ZM391.1,428.2 L391.1,428.2ZM391.4,426.6 L391.4,426.6ZM391.0,425.1 L391.0,425.1ZM391.0,419.8 L391.0,419.8ZM390.3,418.7 L390.3,418.7ZM389.7,418.6 L389.7,418.6ZM389.7,418.0 L389.7,418.0ZM390.8,417.8 L390.8,417.8ZM391.2,418.3 L391.2,418.3ZM391.9,418.4 L391.9,418.4ZM391.0,418.2 L391.0,418.2ZM391.6,418.2 L391.6,418.2ZM388.0,418.8 L388.0,418.8ZM387.6,418.7 L387.6,418.7ZM388.0,418.6 L388.0,418.6ZM388.1,418.0 L388.1,418.0ZM388.6,418.7 L388.6,418.7ZM389.3,418.6 L389.3,418.6ZM388.3,418.4 L388.3,418.4ZM389.2,418.1 L389.2,418.1ZM389.6,417.7 L389.6,417.7ZM389.4,417.3 L389.4,417.3ZM389.3,416.9 L389.3,416.9ZM388.0,416.8 L388.0,416.8ZM389.0,416.3 L389.0,416.3ZM388.7,416.4 L388.7,416.4ZM387.8,415.9 L387.8,415.9ZM389.1,415.9 L389.1,415.9ZM389.9,417.8 L389.9,417.8ZM390.5,417.5 L390.5,417.5ZM390.0,417.2 L390.0,417.2ZM390.6,416.7 L390.6,416.7ZM390.8,417.7 L390.8,417.7ZM390.8,417.4 L390.8,417.4ZM391.0,417.0 L391.0,417.0ZM391.7,416.7 L391.7,416.7ZM390.1,416.4 L390.1,416.4ZM390.5,416.0 L390.5,416.0ZM389.9,416.1 L389.9,416.1ZM390.1,415.9 L390.1,415.9ZM390.4,416.4 L390.4,416.4ZM390.8,416.0 L390.8,416.0ZM391.1,415.9 L391.1,415.9ZM390.7,415.3 L390.7,415.3ZM389.7,415.8 L389.7,415.8ZM389.6,415.6 L389.6,415.6ZM390.1,415.2 L390.1,415.2ZM390.2,414.9 L390.2,414.9ZM389.9,414.9 L389.9,414.9ZM390.9,415.2 L390.9,415.2ZM391.7,415.1 L391.7,415.1ZM390.6,414.7 L390.6,414.7ZM390.8,414.6 L390.8,414.6ZM388.6,415.0 L388.6,415.0ZM389.4,414.9 L389.4,414.9ZM389.1,414.7 L389.1,414.7ZM389.3,414.1 L389.3,414.1ZM394.0,419.5 L394.0,419.5ZM393.7,418.6 L393.7,418.6ZM393.4,417.3 L393.4,417.3ZM392.6,417.5 L392.6,417.5ZM395.0,418.1 L395.0,418.1ZM394.2,417.5 L394.2,417.5ZM394.2,417.3 L394.2,417.3ZM394.4,415.1 L394.4,415.1ZM391.9,417.0 L391.9,417.0ZM392.4,416.6 L392.4,416.6ZM392.5,416.6 L392.5,416.6ZM392.2,416.5 L392.2,416.5ZM393.8,415.8 L393.8,415.8ZM392.7,415.7 L392.7,415.7ZM392.9,415.3 L392.9,415.3ZM393.6,415.0 L393.6,415.0ZM394.2,414.9 L394.2,414.9ZM393.8,414.9 L393.8,414.9ZM392.7,414.8 L392.7,414.8ZM392.1,414.8 L392.1,414.8ZM392.9,414.5 L392.9,414.5ZM391.5,414.5 L391.5,414.5ZM398.8,451.2 L398.8,451.2ZM397.7,451.1 L397.7,451.1ZM398.0,451.0 L398.0,451.0ZM398.0,450.9 L398.0,450.9ZM399.1,452.0 L399.1,452.0ZM399.1,428.6 L399.1,428.6ZM400.1,428.4 L400.1,428.4ZM401.7,427.5 L401.7,427.5ZM397.5,450.8 L397.5,450.8ZM396.9,430.6 L396.9,430.6ZM397.1,430.4 L397.1,430.4ZM398.5,425.9 L398.5,425.9ZM394.3,443.5 L394.3,443.5ZM396.4,437.8 L396.4,437.8ZM396.0,437.8 L396.0,437.8ZM394.8,430.0 L394.8,430.0ZM393.8,443.5 L393.8,443.5ZM392.7,428.1 L392.7,428.1ZM392.4,428.2 L392.4,428.2ZM392.2,428.1 L392.2,428.1ZM393.9,425.8 L393.9,425.8ZM393.2,425.9 L393.2,425.9ZM392.7,424.3 L392.7,424.3ZM395.9,420.9 L395.9,420.9ZM394.4,420.4 L394.4,420.4ZM396.2,420.4 L396.2,420.4ZM395.0,419.6 L395.0,419.6ZM391.8,419.7 L391.8,419.7ZM391.5,419.6 L391.5,419.6ZM391.5,419.6 L391.5,419.6ZM391.9,418.5 L391.9,418.5ZM396.4,430.3 L396.4,430.3ZM394.7,429.5 L394.7,429.5ZM394.9,426.2 L394.9,426.2ZM394.5,425.8 L394.5,425.8ZM399.1,427.0 L399.1,427.0ZM398.9,425.9 L398.9,425.9ZM401.8,426.1 L401.8,426.1ZM397.4,421.5 L397.4,421.5ZM393.1,424.2 L393.1,424.2ZM395.5,422.0 L395.5,422.0ZM395.0,422.0 L395.0,422.0ZM396.1,421.2 L396.1,421.2ZM397.6,423.8 L397.6,423.8ZM397.2,423.4 L397.2,423.4ZM398.3,421.4 L398.3,421.4ZM396.9,421.1 L396.9,421.1ZM398.7,421.1 L398.7,421.1ZM398.8,420.7 L398.8,420.7ZM397.5,420.0 L397.5,420.0ZM398.0,420.0 L398.0,420.0ZM399.7,421.6 L399.7,421.6ZM401.6,421.6 L401.6,421.6ZM399.6,421.1 L399.6,421.1ZM397.7,419.1 L397.7,419.1ZM397.5,419.9 L397.5,419.9ZM397.5,419.7 L397.5,419.7ZM398.2,419.2 L398.2,419.2ZM397.1,418.8 L397.1,418.8ZM396.8,418.6 L396.8,418.6ZM400.1,419.5 L400.1,419.5ZM407.4,419.0 L407.4,419.0ZM406.9,418.9 L406.9,418.9ZM406.7,418.8 L406.7,418.8ZM586.3,384.6 L586.3,384.6ZM587.1,383.2 L587.1,383.2ZM587.5,382.7 L587.5,382.7ZM551.8,289.8 L551.8,289.8ZM544.3,291.4 L544.3,291.4ZM545.3,291.5 L545.3,291.5ZM544.0,291.2 L544.0,291.2ZM542.8,290.6 L542.8,290.6ZM543.9,290.7 L543.9,290.7ZM544.1,290.5 L544.1,290.5ZM544.3,290.6 L544.3,290.6ZM543.2,290.3 L543.2,290.3ZM544.2,290.3 L544.2,290.3ZM543.8,290.2 L543.8,290.2ZM552.0,289.4 L552.0,289.4ZM551.6,289.0 L551.6,289.0ZM549.9,289.1 L549.9,289.1ZM550.4,289.1 L550.4,289.1ZM549.8,289.1 L549.8,289.1ZM552.3,288.6 L552.3,288.6ZM551.5,288.8 L551.5,288.8ZM551.7,288.4 L551.7,288.4ZM546.4,289.7 L546.4,289.7ZM547.0,288.7 L547.0,288.7ZM549.4,288.3 L549.4,288.3ZM549.4,286.3 L549.4,286.3ZM550.5,287.6 L550.5,287.6ZM552.7,288.1 L552.7,288.1ZM552.6,287.0 L552.6,287.0ZM552.4,287.2 L552.4,287.2ZM549.6,286.5 L549.6,286.5ZM549.6,286.2 L549.6,286.2ZM548.9,284.6 L548.9,284.6ZM548.5,283.9 L548.5,283.9ZM387.7,416.5 L387.7,416.5ZM387.0,416.0 L387.0,416.0ZM387.6,415.9 L387.6,415.9ZM386.8,415.7 L386.8,415.7ZM388.7,415.8 L388.7,415.8ZM389.5,415.8 L389.5,415.8ZM388.8,415.2 L388.8,415.2ZM389.0,415.2 L389.0,415.2ZM386.4,415.0 L386.4,415.0ZM387.3,414.8 L387.3,414.8ZM385.6,412.7 L385.6,412.7ZM386.0,411.9 L386.0,411.9ZM386.7,412.1 L386.7,412.1Z"}, {"name": "Catamarca", "d": "M285.4,160.8 L285.4,160.8Z"}, {"name": "Chaco", "d": "M548.3,86.8 L548.3,86.8Z"}, {"name": "Chubut", "d": "M197.1,611.5 L197.1,611.5ZM8.1,611.7 L8.1,611.7ZM209.3,590.9 L209.3,590.9ZM216.5,588.9 L216.5,588.9ZM216.6,588.8 L216.6,588.8ZM214.4,588.5 L214.4,588.5ZM221.3,589.5 L221.3,589.5ZM221.2,589.2 L221.2,589.2ZM217.2,589.1 L217.2,589.1ZM218.0,589.0 L218.0,589.0ZM216.7,589.0 L216.7,589.0ZM217.4,589.0 L217.4,589.0ZM217.0,588.9 L217.0,588.9ZM217.5,588.7 L217.5,588.7ZM223.1,588.3 L223.1,588.3ZM217.2,587.2 L217.2,587.2ZM217.2,587.1 L217.2,587.1ZM220.8,586.7 L220.8,586.7ZM221.2,586.5 L221.2,586.5ZM221.3,586.4 L221.3,586.4ZM223.9,585.9 L223.9,585.9ZM223.4,585.8 L223.4,585.8ZM214.1,588.4 L214.1,588.4ZM235.8,587.6 L235.8,587.6ZM233.9,587.4 L233.9,587.4ZM237.4,587.2 L237.4,587.2ZM237.1,587.1 L237.1,587.1ZM236.7,586.9 L236.7,586.9ZM237.5,586.3 L237.5,586.3ZM236.2,586.6 L236.2,586.6ZM236.6,586.4 L236.6,586.4ZM223.8,585.6 L223.8,585.6ZM239.3,585.5 L239.3,585.5ZM238.8,585.5 L238.8,585.5ZM243.4,585.4 L243.4,585.4ZM244.1,585.4 L244.1,585.4ZM240.3,587.4 L240.3,587.4ZM239.2,586.8 L239.2,586.8ZM245.7,585.8 L245.7,585.8ZM249.3,585.5 L249.3,585.5ZM262.3,586.9 L262.3,586.9ZM253.0,585.6 L253.0,585.6ZM254.1,585.3 L254.1,585.3ZM258.8,584.1 L258.8,584.1ZM255.6,584.1 L255.6,584.1ZM255.2,583.8 L255.2,583.8ZM255.6,583.1 L255.6,583.1ZM252.3,577.7 L252.3,577.7ZM251.3,577.8 L251.3,577.8ZM241.1,585.4 L241.1,585.4ZM242.4,585.4 L242.4,585.4ZM239.3,585.3 L239.3,585.3ZM242.7,585.2 L242.7,585.2ZM247.6,585.1 L247.6,585.1ZM243.0,584.9 L243.0,584.9ZM243.5,585.0 L243.5,585.0ZM238.4,585.0 L238.4,585.0ZM224.8,586.0 L224.8,586.0ZM226.1,585.6 L226.1,585.6ZM233.4,584.1 L233.4,584.1ZM229.4,584.0 L229.4,584.0ZM231.1,583.9 L231.1,583.9ZM233.5,583.9 L233.5,583.9ZM230.3,583.9 L230.3,583.9ZM252.0,577.7 L252.0,577.7ZM267.8,563.8 L267.8,563.8ZM266.9,549.1 L266.9,549.1ZM298.2,513.3 L298.2,513.3ZM294.6,513.4 L294.6,513.4ZM333.5,510.5 L333.5,510.5ZM319.1,501.8 L319.1,501.8Z"}, {"name": "Ciudad de Buenos Aires", "d": "M549.1,299.8 L549.1,299.8Z"}, {"name": "C\u00f3rdoba", "d": "M343.8,309.8 L343.8,309.8Z"}, {"name": "Corrientes", "d": "M570.9,193.5 L570.9,193.5Z"}, {"name": "Entre R\u00edos", "d": "M471.6,262.1 L471.6,262.1ZM546.8,281.8 L546.8,281.8ZM547.1,281.1 L547.1,281.1Z"}, {"name": "Formosa", "d": "M386.3,11.2 L386.3,11.2Z"}, {"name": "Jujuy", "d": "M188.3,0.0 L188.3,0.0Z"}, {"name": "La Pampa", "d": "M343.9,428.3 L343.9,428.3Z"}, {"name": "La Rioja", "d": "M246.8,224.4 L246.8,224.4Z"}, {"name": "Mendoza", "d": "M146.6,380.6 L146.6,380.6Z"}, {"name": "Misiones", "d": "M660.0,121.5 L660.0,121.5Z"}, {"name": "Neuqu\u00e9n", "d": "M0.0,475.3 L0.0,475.3Z"}, {"name": "R\u00edo Negro", "d": "M278.4,501.8 L278.4,501.8ZM277.4,486.7 L277.4,486.7ZM276.5,485.7 L276.5,485.7ZM278.4,474.4 L278.4,474.4ZM285.1,468.3 L285.1,468.3ZM284.9,467.8 L284.9,467.8ZM284.4,468.2 L284.4,468.2ZM284.9,467.8 L284.9,467.8Z"}, {"name": "Salta", "d": "M136.8,39.9 L136.8,39.9Z"}, {"name": "San Juan", "d": "M70.0,243.3 L70.0,243.3Z"}, {"name": "San Luis", "d": "M274.1,309.8 L274.1,309.8Z"}, {"name": "Santa Cruz", "d": "M138.7,786.9 L138.7,786.9ZM138.7,786.9 L138.7,786.9ZM111.3,766.7 L111.3,766.7ZM111.3,766.1 L111.3,766.1ZM6.2,776.1 L6.2,776.1ZM110.3,766.4 L110.3,766.4ZM111.0,766.3 L111.0,766.3ZM109.4,765.9 L109.4,765.9ZM111.7,765.1 L111.7,765.1ZM112.8,764.8 L112.8,764.8ZM112.7,764.8 L112.7,764.8ZM115.4,764.6 L115.4,764.6ZM5.8,624.1 L5.8,624.1ZM106.7,748.2 L106.7,748.2ZM107.2,747.7 L107.2,747.7ZM108.0,747.3 L108.0,747.3ZM114.5,764.4 L114.5,764.4ZM114.4,764.2 L114.4,764.2ZM114.6,764.1 L114.6,764.1ZM115.8,748.6 L115.8,748.6ZM224.7,676.2 L224.7,676.2ZM5.8,624.1 L5.8,624.1ZM227.1,673.1 L227.1,673.1ZM227.7,672.9 L227.7,672.9ZM234.3,669.9 L234.3,669.9ZM233.5,669.8 L233.5,669.8ZM240.2,669.7 L240.2,669.7ZM239.8,669.5 L239.8,669.5ZM242.1,669.5 L242.1,669.5ZM237.2,669.4 L237.2,669.4ZM238.1,669.4 L238.1,669.4ZM238.4,669.3 L238.4,669.3ZM242.0,668.4 L242.0,668.4ZM240.8,667.0 L240.8,667.0ZM242.3,668.7 L242.3,668.7ZM243.4,665.2 L243.4,665.2ZM243.0,665.2 L243.0,665.2ZM243.0,665.1 L243.0,665.1ZM240.5,666.8 L240.5,666.8ZM241.9,666.5 L241.9,666.5ZM242.3,664.6 L242.3,664.6ZM243.3,664.9 L243.3,664.9ZM248.6,664.1 L248.6,664.1ZM248.5,664.1 L248.5,664.1ZM247.7,664.0 L247.7,664.0ZM249.4,663.8 L249.4,663.8ZM243.2,660.9 L243.2,660.9ZM242.7,659.9 L242.7,659.9ZM244.3,659.3 L244.3,659.3Z"}, {"name": "Santa Fe", "d": "M364.3,293.0 L364.3,293.0Z"}, {"name": "Santiago del Estero", "d": "M285.4,160.8 L285.4,160.8Z"}, {"name": "Tierra del Fuego", "d": "M215.6,860.0 L215.6,860.0ZM225.4,858.6 L225.4,858.6ZM254.6,856.9 L254.6,856.9ZM294.3,856.1 L294.3,856.1ZM246.3,855.9 L246.3,855.9ZM181.7,855.8 L181.7,855.8ZM181.0,855.4 L181.0,855.4ZM179.6,855.4 L179.6,855.4ZM183.0,855.4 L183.0,855.4ZM181.5,855.4 L181.5,855.4ZM291.8,855.3 L291.8,855.3ZM185.6,855.1 L185.6,855.1ZM299.6,855.0 L299.6,855.0ZM312.3,854.9 L312.3,854.9ZM298.7,854.5 L298.7,854.5ZM312.9,854.2 L312.9,854.2ZM297.9,855.0 L297.9,855.0ZM176.9,854.8 L176.9,854.8ZM138.1,854.6 L138.1,854.6ZM146.1,853.8 L146.1,853.8ZM303.4,854.1 L303.4,854.1ZM306.1,854.1 L306.1,854.1ZM305.4,850.4 L305.4,850.4ZM315.3,851.4 L315.3,851.4ZM315.2,851.3 L315.2,851.3ZM315.3,851.2 L315.3,851.2ZM308.6,851.0 L308.6,851.0ZM309.1,850.8 L309.1,850.8ZM309.0,850.4 L309.0,850.4ZM309.4,850.0 L309.4,850.0ZM309.0,849.9 L309.0,849.9ZM308.7,849.4 L308.7,849.4ZM308.4,849.3 L308.4,849.3ZM313.8,848.6 L313.8,848.6ZM295.3,853.2 L295.3,853.2ZM296.7,852.7 L296.7,852.7ZM225.8,844.9 L225.8,844.9ZM137.0,854.5 L137.0,854.5ZM131.6,794.0 L131.6,794.0ZM131.5,793.9 L131.5,793.9ZM131.5,793.9 L131.5,793.9ZM131.5,793.9 L131.5,793.9ZM130.0,793.4 L130.0,793.4ZM130.0,793.4 L130.0,793.4ZM130.0,793.4 L130.0,793.4ZM130.0,793.4 L130.0,793.4ZM129.9,793.4 L129.9,793.4ZM129.9,793.4 L129.9,793.4ZM129.9,793.4 L129.9,793.4ZM129.7,793.3 L129.7,793.3ZM129.6,793.3 L129.6,793.3ZM129.4,793.2 L129.4,793.2ZM129.3,793.2 L129.3,793.2ZM129.3,793.2 L129.3,793.2ZM129.3,793.1 L129.3,793.1ZM129.2,793.1 L129.2,793.1ZM129.1,793.1 L129.1,793.1ZM129.1,793.1 L129.1,793.1ZM129.1,793.1 L129.1,793.1ZM129.1,793.1 L129.1,793.1ZM128.9,793.0 L128.9,793.0ZM128.7,792.9 L128.7,792.9ZM128.7,792.9 L128.7,792.9ZM128.7,792.9 L128.7,792.9ZM128.6,792.9 L128.6,792.9ZM128.4,792.8 L128.4,792.8ZM128.4,792.8 L128.4,792.8ZM128.3,792.7 L128.3,792.7ZM128.2,792.7 L128.2,792.7ZM128.1,792.6 L128.1,792.6ZM128.1,792.6 L128.1,792.6ZM128.1,792.6 L128.1,792.6ZM128.0,792.6 L128.0,792.6ZM127.9,792.6 L127.9,792.6ZM127.9,792.5 L127.9,792.5ZM127.9,792.5 L127.9,792.5ZM127.9,792.5 L127.9,792.5ZM127.8,792.5 L127.8,792.5ZM127.8,792.5 L127.8,792.5ZM127.8,792.4 L127.8,792.4ZM127.7,792.4 L127.7,792.4ZM127.7,792.4 L127.7,792.4ZM127.7,792.4 L127.7,792.4ZM127.6,792.4 L127.6,792.4ZM127.6,792.3 L127.6,792.3ZM127.6,792.3 L127.6,792.3ZM127.6,792.3 L127.6,792.3ZM127.5,792.3 L127.5,792.3ZM127.5,792.3 L127.5,792.3ZM127.5,792.2 L127.5,792.2ZM127.5,792.2 L127.5,792.2ZM127.4,792.2 L127.4,792.2ZM127.4,792.2 L127.4,792.2ZM127.4,792.2 L127.4,792.2ZM127.2,792.1 L127.2,792.1ZM127.2,792.1 L127.2,792.1ZM127.2,792.0 L127.2,792.0ZM127.2,792.0 L127.2,792.0ZM127.1,792.0 L127.1,792.0ZM127.1,792.0 L127.1,792.0ZM127.1,792.0 L127.1,792.0ZM127.1,791.9 L127.1,791.9ZM127.0,791.9 L127.0,791.9ZM126.5,791.4 L126.5,791.4ZM126.3,791.4 L126.3,791.4ZM126.2,791.3 L126.2,791.3ZM126.1,791.2 L126.1,791.2ZM126.1,791.2 L126.1,791.2ZM126.0,791.1 L126.0,791.1ZM126.0,791.1 L126.0,791.1ZM126.0,791.1 L126.0,791.1ZM125.9,791.1 L125.9,791.1ZM125.9,791.1 L125.9,791.1ZM125.9,791.1 L125.9,791.1ZM125.0,791.0 L125.0,791.0ZM125.5,791.0 L125.5,791.0ZM125.0,790.9 L125.0,790.9Z"}, {"name": "Tucum\u00e1n", "d": "M234.4,69.1 L234.4,69.1Z"}];
+const CITIES = [{"n": "Buenos Aires", "cx": 547.6, "cy": 299.0, "r": 9.8, "pop": 16710000}, {"n": "C\u00f3rdoba", "cx": 311.6, "cy": 211.6, "r": 6.7, "pop": 1537000}, {"n": "Rosario", "cx": 455.7, "cy": 253.6, "r": 6.4, "pop": 1276000}, {"n": "Mendoza", "cx": 123.2, "cy": 251.8, "r": 6.1, "pop": 1007000}, {"n": "Tucum\u00e1n", "cx": 269.6, "cy": 85.2, "r": 5.9, "pop": 869000}, {"n": "La Plata", "cx": 564.9, "cy": 307.7, "r": 5.6, "pop": 652000}, {"n": "Mar del Plata", "cx": 582.0, "cy": 392.1, "r": 5.6, "pop": 680000}, {"n": "Salta", "cx": 261.5, "cy": 29.7, "r": 5.5, "pop": 619000}, {"n": "Santa Fe", "cx": 453.3, "cy": 217.5, "r": 5.2, "pop": 491000}, {"n": "San Juan", "cx": 135.4, "cy": 214.8, "r": 5.1, "pop": 470000}, {"n": "Resistencia", "cx": 523.0, "cy": 102.8, "r": 5.0, "pop": 424000}, {"n": "Santiago del Estero", "cx": 308.2, "cy": 111.9, "r": 5.0, "pop": 409000}, {"n": "Corrientes", "cx": 529.2, "cy": 103.6, "r": 4.9, "pop": 390000}, {"n": "Posadas", "cx": 648.5, "cy": 100.5, "r": 4.8, "pop": 368000}, {"n": "Neuqu\u00e9n", "cx": 154.0, "cy": 418.2, "r": 4.8, "pop": 358000}, {"n": "Bah\u00eda Blanca", "cx": 389.3, "cy": 411.9, "r": 4.7, "pop": 336000}, {"n": "Jujuy", "cx": 266.2, "cy": 13.3, "r": 4.6, "pop": 318000}, {"n": "Paran\u00e1", "cx": 460.1, "cy": 220.3, "r": 4.6, "pop": 312000}, {"n": "Formosa", "cx": 555.8, "cy": 67.9, "r": 4.5, "pop": 295000}, {"n": "San Luis", "cx": 224.1, "cy": 263.1, "r": 4.3, "pop": 250000}, {"n": "La Rioja", "cx": 203.0, "cy": 156.6, "r": 4.1, "pop": 216000}, {"n": "Comodoro Rivadavia", "cx": 176.9, "cy": 607.8, "r": 3.9, "pop": 185000}, {"n": "Catamarca", "cx": 246.7, "cy": 130.8, "r": 3.9, "pop": 183000}, {"n": "Santa Rosa", "cx": 307.6, "cy": 354.2, "r": 3.5, "pop": 131000}, {"n": "Trelew", "cx": 265.9, "cy": 536.1, "r": 3.3, "pop": 115000}, {"n": "Bariloche", "cx": 22.2, "cy": 478.1, "r": 3.6, "pop": 140000}, {"n": "R\u00edo Gallegos", "cx": 106.9, "cy": 765.7, "r": 3.2, "pop": 103000}, {"n": "Viedma", "cx": 359.9, "cy": 469.3, "r": 3, "pop": 79000}, {"n": "Ushuaia", "cx": 144.2, "cy": 852.9, "r": 3, "pop": 82000}, {"n": "R\u00edo Grande", "cx": 168.3, "cy": 825.1, "r": 3, "pop": 80000}, {"n": "General Roca", "cx": 173.4, "cy": 420.5, "r": 3, "pop": 90000}, {"n": "Puerto Madryn", "cx": 277.1, "cy": 522.9, "r": 3.1, "pop": 100000}, {"n": "Concordia", "cx": 562.2, "cy": 210.9, "r": 3.8, "pop": 166000}, {"n": "Rafaela", "cx": 421.2, "cy": 207.1, "r": 3.2, "pop": 105000}, {"n": "Tandil", "cx": 517.0, "cy": 373.4, "r": 3.7, "pop": 159000}, {"n": "Pergamino", "cx": 458.9, "cy": 279.4, "r": 3.2, "pop": 109000}, {"n": "Olavarr\u00eda", "cx": 468.6, "cy": 361.8, "r": 3.2, "pop": 104000}];
 
-// Ciudades principales de Argentina con coordenadas
-const CIUDADES = [
-  {ciudad:"Buenos Aires",prov:"Buenos Aires",lat:-34.6037,lng:-58.3816,pop:16710000},
-  {ciudad:"Córdoba",prov:"Cordoba",lat:-31.4167,lng:-64.1833,pop:1537000},
-  {ciudad:"Rosario",prov:"Santa Fe",lat:-32.9468,lng:-60.6393,pop:1276000},
-  {ciudad:"Mendoza",prov:"Mendoza",lat:-32.8833,lng:-68.8167,pop:1007000},
-  {ciudad:"San Miguel de Tucumán",prov:"Tucuman",lat:-26.8083,lng:-65.2176,pop:869000},
-  {ciudad:"La Plata",prov:"Buenos Aires",lat:-34.9206,lng:-57.9547,pop:852000},
-  {ciudad:"Mar del Plata",prov:"Buenos Aires",lat:-38.0,lng:-57.5333,pop:680000},
-  {ciudad:"Salta",prov:"Salta",lat:-24.7833,lng:-65.4167,pop:619000},
-  {ciudad:"Santa Fe",prov:"Santa Fe",lat:-31.6333,lng:-60.7,pop:491000},
-  {ciudad:"San Juan",prov:"San Juan",lat:-31.5333,lng:-68.5167,pop:470000},
-  {ciudad:"Resistencia",prov:"Chaco",lat:-27.4513,lng:-58.9861,pop:424000},
-  {ciudad:"Santiago del Estero",prov:"Santiago del Estero",lat:-27.7833,lng:-64.2667,pop:409000},
-  {ciudad:"Corrientes",prov:"Corrientes",lat:-27.4806,lng:-58.8341,pop:390000},
-  {ciudad:"Posadas",prov:"Misiones",lat:-27.3667,lng:-55.9,pop:368000},
-  {ciudad:"Neuquén",prov:"Neuquen",lat:-38.9516,lng:-68.0591,pop:358000},
-  {ciudad:"Bahía Blanca",prov:"Buenos Aires",lat:-38.7196,lng:-62.2724,pop:336000},
-  {ciudad:"San Salvador de Jujuy",prov:"Jujuy",lat:-24.1858,lng:-65.2995,pop:318000},
-  {ciudad:"Paraná",prov:"Entre Rios",lat:-31.7333,lng:-60.5333,pop:312000},
-  {ciudad:"Formosa",prov:"Formosa",lat:-26.1775,lng:-58.1781,pop:295000},
-  {ciudad:"San Luis",prov:"San Luis",lat:-33.2958,lng:-66.3356,pop:250000},
-  {ciudad:"La Rioja",prov:"La Rioja",lat:-29.4131,lng:-66.8558,pop:216000},
-  {ciudad:"Río Cuarto",prov:"Cordoba",lat:-33.1307,lng:-64.3499,pop:195000},
-  {ciudad:"Comodoro Rivadavia",prov:"Chubut",lat:-45.8645,lng:-67.4953,pop:185000},
-  {ciudad:"Catamarca",prov:"Catamarca",lat:-28.4696,lng:-65.7795,pop:183000},
-  {ciudad:"Concordia",prov:"Entre Rios",lat:-31.3901,lng:-58.0204,pop:166000},
-  {ciudad:"Tandil",prov:"Buenos Aires",lat:-37.3167,lng:-59.1333,pop:159000},
-  {ciudad:"Santa Rosa",prov:"La Pampa",lat:-36.6167,lng:-64.2833,pop:131000},
-  {ciudad:"Viedma",prov:"Rio Negro",lat:-40.8135,lng:-62.9967,pop:79000},
-  {ciudad:"Rawson",prov:"Chubut",lat:-43.3002,lng:-65.1023,pop:36000},
-  {ciudad:"Ushuaia",prov:"Tierra del Fuego",lat:-54.8,lng:-68.3,pop:82000},
-  {ciudad:"Río Gallegos",prov:"Santa Cruz",lat:-51.6226,lng:-69.2181,pop:103000},
-  {ciudad:"San Carlos de Bariloche",prov:"Rio Negro",lat:-41.1333,lng:-71.3,pop:140000},
-  {ciudad:"Villa Carlos Paz",prov:"Cordoba",lat:-31.4231,lng:-64.4977,pop:79000},
-  {ciudad:"Quilmes",prov:"Buenos Aires",lat:-34.7215,lng:-58.2537,pop:582000},
-  {ciudad:"Lomas de Zamora",prov:"Buenos Aires",lat:-34.7565,lng:-58.4031,pop:616000},
-  {ciudad:"San Martín (GBA)",prov:"Buenos Aires",lat:-34.5749,lng:-58.5366,pop:425000},
-  {ciudad:"Tigre",prov:"Buenos Aires",lat:-34.4258,lng:-58.5796,pop:376000},
-  {ciudad:"Merlo",prov:"Buenos Aires",lat:-34.6633,lng:-58.7264,pop:528000},
-  {ciudad:"Moreno",prov:"Buenos Aires",lat:-34.6497,lng:-58.7897,pop:452000},
-  {ciudad:"Florencio Varela",prov:"Buenos Aires",lat:-34.8074,lng:-58.2749,pop:427000},
-  {ciudad:"Berazategui",prov:"Buenos Aires",lat:-34.7636,lng:-58.2119,pop:344000},
-  {ciudad:"Almirante Brown",prov:"Buenos Aires",lat:-34.8333,lng:-58.3833,pop:548000},
-  {ciudad:"Lanús",prov:"Buenos Aires",lat:-34.7002,lng:-58.3985,pop:459000},
-  {ciudad:"Avellaneda",prov:"Buenos Aires",lat:-34.6631,lng:-58.3636,pop:342000},
-  {ciudad:"Tres de Febrero",prov:"Buenos Aires",lat:-34.6,lng:-58.5667,pop:340000},
-  {ciudad:"Pergamino",prov:"Buenos Aires",lat:-33.8882,lng:-60.5623,pop:109000},
-  {ciudad:"Junín",prov:"Buenos Aires",lat:-34.5919,lng:-60.9463,pop:103000},
-  {ciudad:"Campana",prov:"Buenos Aires",lat:-34.1644,lng:-58.9556,pop:97000},
-  {ciudad:"Zárate",prov:"Buenos Aires",lat:-34.0981,lng:-59.0293,pop:95000},
-  {ciudad:"Azul",prov:"Buenos Aires",lat:-36.7768,lng:-59.8578,pop:65000},
-  {ciudad:"Olavarría",prov:"Buenos Aires",lat:-36.8927,lng:-60.3227,pop:104000},
-  {ciudad:"Necochea",prov:"Buenos Aires",lat:-38.5539,lng:-58.7381,pop:93000},
-  {ciudad:"Villa María",prov:"Cordoba",lat:-32.4074,lng:-63.2436,pop:96000},
-  {ciudad:"San Francisco",prov:"Cordoba",lat:-31.4278,lng:-62.0819,pop:65000},
-  {ciudad:"Rafaela",prov:"Santa Fe",lat:-31.2521,lng:-61.4895,pop:105000},
-  {ciudad:"Venado Tuerto",prov:"Santa Fe",lat:-33.7455,lng:-61.9664,pop:83000},
-  {ciudad:"Reconquista",prov:"Santa Fe",lat:-29.1458,lng:-59.6468,pop:80000},
-  {ciudad:"Oberá",prov:"Misiones",lat:-27.4888,lng:-55.1208,pop:75000},
-  {ciudad:"El Dorado",prov:"Misiones",lat:-26.3973,lng:-54.6063,pop:75000},
-  {ciudad:"General Roca",prov:"Rio Negro",lat:-39.0333,lng:-67.5833,pop:90000},
-  {ciudad:"Cipolletti",prov:"Rio Negro",lat:-38.9333,lng:-68.0,pop:89000},
-  {ciudad:"Trelew",prov:"Chubut",lat:-43.2493,lng:-65.3085,pop:115000},
-  {ciudad:"Puerto Madryn",prov:"Chubut",lat:-42.7682,lng:-65.0317,pop:100000},
-  {ciudad:"Tartagal",prov:"Salta",lat:-22.5211,lng:-63.7997,pop:80000},
-  {ciudad:"Orán",prov:"Salta",lat:-23.1337,lng:-64.3216,pop:80000},
-  {ciudad:"Goya",prov:"Corrientes",lat:-29.1423,lng:-59.2631,pop:82000},
-  {ciudad:"Curuzú Cuatiá",prov:"Corrientes",lat:-29.7938,lng:-58.0517,pop:37000},
-  {ciudad:"Ledesma",prov:"Jujuy",lat:-23.8,lng:-64.7833,pop:40000},
-  {ciudad:"Libertador General San Martín",prov:"Jujuy",lat:-23.8,lng:-64.7833,pop:35000},
-  {ciudad:"San Pedro de Jujuy",prov:"Jujuy",lat:-24.2333,lng:-64.8667,pop:70000},
-  {ciudad:"Villa Mercedes",prov:"San Luis",lat:-33.6738,lng:-65.4632,pop:110000},
-  {ciudad:"Río Tercero",prov:"Cordoba",lat:-32.1735,lng:-64.1116,pop:52000},
-  {ciudad:"Alta Gracia",prov:"Cordoba",lat:-31.6552,lng:-64.4296,pop:54000},
-  {ciudad:"Cruz del Eje",prov:"Cordoba",lat:-30.7264,lng:-64.8027,pop:34000},
-  {ciudad:"Dean Funes",prov:"Cordoba",lat:-30.4225,lng:-64.3483,pop:22000},
-  {ciudad:"Chilecito",prov:"La Rioja",lat:-29.1619,lng:-67.4982,pop:45000},
-  {ciudad:"Tinogasta",prov:"Catamarca",lat:-28.0652,lng:-67.5675,pop:14000},
-  {ciudad:"Andalgalá",prov:"Catamarca",lat:-27.5996,lng:-66.3125,pop:15000},
-  {ciudad:"Bella Vista",prov:"Corrientes",lat:-28.5032,lng:-59.0442,pop:35000},
-  {ciudad:"Mercedes",prov:"Corrientes",lat:-29.1821,lng:-58.0775,pop:40000},
-  {ciudad:"Paso de los Libres",prov:"Corrientes",lat:-29.7128,lng:-57.0852,pop:44000},
-  {ciudad:"Santo Tomé",prov:"Corrientes",lat:-28.5518,lng:-56.0418,pop:24000},
-  {ciudad:"General Pico",prov:"La Pampa",lat:-35.6565,lng:-63.7569,pop:65000},
-  {ciudad:"Chos Malal",prov:"Neuquen",lat:-37.3783,lng:-70.2688,pop:14000},
-  {ciudad:"Cutral-Có",prov:"Neuquen",lat:-38.9333,lng:-69.2333,pop:50000},
-  {ciudad:"Zapala",prov:"Neuquen",lat:-38.9,lng:-70.0667,pop:40000},
-  {ciudad:"San Antonio Oeste",prov:"Rio Negro",lat:-40.7333,lng:-65.0,pop:22000},
-  {ciudad:"Esquel",prov:"Chubut",lat:-42.9104,lng:-71.3176,pop:39000},
-  {ciudad:"Caleta Olivia",prov:"Santa Cruz",lat:-46.4401,lng:-67.5215,pop:57000},
-  {ciudad:"Pico Truncado",prov:"Santa Cruz",lat:-46.7911,lng:-68.0,pop:20000},
-  {ciudad:"Puerto Deseado",prov:"Santa Cruz",lat:-47.75,lng:-65.9,pop:17000},
-  {ciudad:"Tolhuin",prov:"Tierra del Fuego",lat:-54.5,lng:-67.2,pop:7000},
-  {ciudad:"Río Grande",prov:"Tierra del Fuego",lat:-53.7879,lng:-67.7073,pop:80000},
-];
+const vals = Object.values(DATOS);
+const minV = Math.min(...vals), maxV = Math.max(...vals);
+document.getElementById('leg-min').textContent = minV;
+document.getElementById('leg-max').textContent = maxV;
 
-// Setup mapa
-const map = L.map('map', {
-  center: [-38, -65],
-  zoom: 4,
-  zoomControl: true,
-  attributionControl: false,
-});
-
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_only_labels/{z}/{x}/{y}{r}.png', {
-  maxZoom: 19,
-}).addTo(map);
-
-// Calcular rango de valores
-const valores = Object.values(DATOS_PROVINCIAS);
-const minVal = Math.min(...valores);
-const maxVal = Math.max(...valores);
-
-document.getElementById('leg-min').textContent = minVal;
-document.getElementById('leg-max').textContent = maxVal;
-
-function getColor(val) {
-  if (val === undefined) return '#2a2a2a';
-  const t = (val - minVal) / (maxVal - minVal || 1);
-  const r = Math.round(13 + t * (88 - 13));
-  const g = Math.round(33 + t * (166 - 33));
-  const b = Math.round(23 + t * (255 - 23));
-  return `rgb(${r},${g},${b})`;
+function getColor(v) {
+  if (v === undefined) return '#2a2a2a';
+  const t = (v - minV) / (maxV - minV || 1);
+  return `rgb(${Math.round(10+t*48)},${Math.round(37+t*129)},${Math.round(40+t*215)})`;
 }
 
-// Cargar GeoJSON desde la copia local embebida (TopoJSON → convertido inline)
-// Usamos el archivo que el usuario ya tiene
-const GEOJSON_DATA = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"name":"Buenos Aires"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-62.1,-40.55],[-62.1,-40.55]]],[[[-62.1,-40.55],[-62.1,-40.55]]],[[[-62.12,-40.38],[-62.08,-40.39],[-62.12,-40.38]]],[[[-62.13,-40.37],[-62.13,-40.37]]],[[[-62.04,-40.29],[-62.04,-40.29]]],[[[-62.04,-40.29],[-62.04,-40.29]]],[[[-62.08,-40.27],[-62.08,-40.27]]],[[[-62.08,-40.27],[-62.08,-40.27]]],[[[-62.04,-40.26],[-62.04,-40.26]]],[[[-62.09,-40.25],[-62.09,-40.25]]],[[[-62.06,-40.23],[-62.05,-40.27],[-62.06,-40.23]]],[[[-62.09,-40.24],[-62.09,-40.24]]],[[[-62.09,-40.25],[-62.09,-40.25]]],[[[-62.1,-40.24],[-62.1,-40.24]]],[[[-62.11,-40.23],[-62.11,-40.23]]],[[[-62.11,-40.23],[-62.11,-40.23]]],[[[-62.18,-40.63],[-62.18,-40.63]]],[[[-62.13,-40.43],[-62.16,-40.54],[-62.15,-40.47],[-62.18,-40.54],[-62.24,-40.51],[-62.13,-40.43]]],[[[-62.17,-40.44],[-62.17,-40.44]]],[[[-62.19,-40.44],[-62.19,-40.44]]],[[[-62.22,-40.32],[-62.22,-40.32]]],[[[-62.21,-40.32],[-62.21,-40.32]]],[[[-62.21,-40.31],[-62.21,-40.31]]],[[[-62.23,-40.31],[-62.23,-40.31]]],[[[-62.2,-40.44],[-62.2,-40.44]]],[[[-62.16,-40.37],[-62.13,-40.41],[-62.2,-40.44],[-62.16,-40.37]]],[[[-62.16,-40.02],[-62.16,-40.02]]],[[[-62.2,-39.97],[-62.2,-39.97]]],[[[-62.22,-40.3],[-62.22,-40.3]]],[[[-62.21,-40.01],[-62.21,-40.01]]],[[[-62.23,-39.98],[-62.23,-39.98]]],[[[-62.21,-39.97],[-62.21,-39.97]]],[[[-62.09,-40.24],[-62.09,-40.24]]],[[[-62.04,-40.23],[-62.04,-40.23]]],[[[-62.05,-40.2],[-62.05,-40.2]]],[[[-62.07,-40.19],[-62.07,-40.19]]],[[[-62.06,-40.19],[-62.06,-40.19]]],[[[-62.08,-40.19],[-62.08,-40.19]]],[[[-62.04,-40.18],[-62.04,-40.18]]],[[[-62.06,-40.18],[-62.06,-40.18]]],[[[-62.1,-40.21],[-62.1,-40.21]]],[[[-62.09,-40.21],[-62.09,-40.21]]],[[[-62.13,-40.18],[-62.13,-40.18]]],[[[-62.11,-40.13],[-62.11,-40.23],[-62.11,-40.13]]],[[[-62.07,-40.17],[-62.07,-40.17]]],[[[-62.07,-40.17],[-62.07,-40.17]]],[[[-62.07,-40.16],[-62.07,-40.16]]],[[[-62.09,-40.14],[-62.08,-40.18],[-62.09,-40.14]]],[[[-62.1,-40.13],[-62.1,-40.13]]],[[[-62.1,-40.13],[-62.1,-40.13]]],[[[-62.12,-40.03],[-62.12,-40.03]]],[[[-62.1,-40.0],[-62.1,-40.0]]],[[[-62.16,-39.94],[-62.16,-39.94]]],[[[-62.18,-39.9],[-62.17,-39.95],[-62.18,-39.9]]],[[[-62.2,-39.91],[-62.2,-39.91]]],[[[-62.2,-39.91],[-62.2,-39.91]]],[[[-62.11,-39.93],[-62.11,-39.93]]],[[[-62.16,-39.94],[-62.17,-39.88],[-62.11,-39.91],[-62.16,-39.94]]],[[[-62.15,-39.88],[-62.15,-39.88]]],[[[-62.15,-39.88],[-62.15,-39.88]]],[[[-62.19,-39.89],[-62.23,-39.91],[-62.19,-39.89]]],[[[-62.2,-39.89],[-62.2,-39.89]]],[[[-62.18,-39.89],[-62.18,-39.89]]],[[[-62.16,-39.88],[-62.16,-39.88]]],[[[-62.8,-41.03],[-62.8,-41.03]]],[[[-62.36,-40.35],[-62.36,-40.35]]],[[[-62.38,-40.31],[-62.38,-40.31]]],[[[-62.45,-40.31],[-62.45,-40.31]]],[[[-62.29,-40.39],[-62.29,-40.39]]],[[[-62.28,-40.39],[-62.28,-40.39]]],[[[-62.27,-40.38],[-62.27,-40.38]]],[[[-62.29,-40.38],[-62.29,-40.38]]],[[[-62.41,-40.31],[-62.41,-40.31]]],[[[-62.43,-40.3],[-62.43,-40.3]]],[[[-62.4,-40.29],[-62.4,-40.29]]],[[[-62.3,-40.18],[-62.26,-40.3],[-62.33,-40.39],[-62.32,-40.25],[-62.39,-40.25],[-62.3,-40.18]]],[[[-62.26,-40.37],[-62.26,-40.37]]],[[[-62.27,-40.37],[-62.27,-40.37]]],[[[-62.27,-40.24],[-62.27,-40.24]]],[[[-62.29,-40.1],[-62.29,-40.1]]],[[[-62.24,-40.61],[-62.24,-40.61]]],[[[-62.32,-40.52],[-62.18,-40.62],[-62.25,-40.64],[-62.32,-40.52]]],[[[-62.26,-40.38],[-62.26,-40.38]]],[[[-62.26,-40.37],[-62.26,-40.37]]],[[[-62.23,-40.35],[-62.23,-40.35]]],[[[-62.24,-40.35],[-62.24,-40.35]]],[[[-62.22,-40.34],[-62.22,-40.34]]],[[[-62.22,-40.34],[-62.22,-40.34]]],[[[-62.26,-40.37],[-62.26,-40.37]]],[[[-62.25,-40.36],[-62.25,-40.36]]],[[[-62.24,-40.35],[-62.24,-40.35]]],[[[-62.25,-40.31],[-62.25,-40.31]]],[[[-62.26,-40.29],[-62.26,-40.29]]],[[[-62.24,-40.18],[-62.24,-40.18]]],[[[-62.24,-40.08],[-62.24,-40.08]]],[[[-62.25,-40.03],[-62.25,-40.03]]],[[[-62.27,-40.08],[-62.27,-40.08]]],[[[-62.27,-40.03],[-62.27,-40.03]]],[[[-62.27,-40.01],[-62.27,-40.01]]],[[[-62.27,-39.99],[-62.27,-39.99]]],[[[-62.25,-39.99],[-62.25,-39.99]]],[[[-62.24,-39.98],[-62.24,-39.98]]],[[[-62.26,-39.98],[-62.26,-39.98]]],[[[-62.25,-39.99],[-62.25,-39.99]]],[[[-62.25,-39.97],[-62.25,-39.97]]],[[[-62.26,-39.92],[-62.26,-39.92]]],[[[-62.26,-39.89],[-62.26,-39.89]]],[[[-62.25,-39.89],[-62.25,-39.89]]],[[[-62.22,-39.92],[-62.22,-39.92]]],[[[-62.24,-39.92],[-62.24,-39.92]]],[[[-62.23,-39.91],[-62.23,-39.91]]],[[[-62.24,-39.89],[-62.24,-39.89]]],[[[-62.32,-40.18],[-62.32,-40.18]]],[[[-62.31,-40.18],[-62.31,-40.18]]],[[[-62.79,-41.02],[-62.95,-40.82],[-63.39,-40.71],[-63.39,-34.38],[-61.72,-34.38],[-60.87,-33.55],[-60.46,-33.63],[-60.25,-33.26],[-59.62,-33.69],[-59.52,-33.63],[-59.44,-33.73],[-59.26,-33.72],[-59.24,-33.8],[-59.01,-33.83],[-58.66,-34.04],[-58.38,-34.02],[-58.35,-34.2],[-58.52,-34.3],[-58.45,-34.39],[-58.52,-34.45],[-58.45,-34.53],[-58.53,-34.66],[-58.46,-34.71],[-58.34,-34.63],[-58.18,-34.74],[-57.88,-34.83],[-57.9,-34.87],[-57.87,-34.83],[-57.51,-35.02],[-57.22,-35.27],[-57.12,-35.44],[-57.36,-35.74],[-57.38,-35.97],[-57.11,-36.28],[-56.91,-36.34],[-56.73,-36.32],[-56.67,-36.89],[-57.14,-37.5],[-57.42,-37.74],[-57.32,-37.56],[-57.41,-37.62],[-57.54,-38.1],[-57.85,-38.3],[-58.5,-38.54],[-59.78,-38.83],[-61.13,-39.0],[-61.81,-38.99],[-62.07,-38.93],[-62.13,-38.82],[-62.31,-38.78],[-62.35,-38.72],[-62.47,-38.75],[-62.3,-38.79],[-62.39,-38.83],[-62.28,-38.85],[-62.35,-38.86],[-62.35,-38.95],[-62.22,-39.0],[-62.33,-39.09],[-62.28,-39.11],[-62.32,-39.18],[-62.24,-39.25],[-62.32,-39.27],[-62.11,-39.29],[-62.01,-39.38],[-62.04,-39.41],[-62.18,-39.3],[-62.27,-39.31],[-62.05,-39.45],[-62.12,-39.85],[-62.17,-39.83],[-62.12,-39.87],[-62.31,-39.87],[-62.32,-40.15],[-62.49,-40.31],[-62.41,-40.47],[-62.26,-40.56],[-62.25,-40.65],[-62.33,-40.59],[-62.34,-40.64],[-62.19,-40.64],[-62.31,-40.87],[-62.79,-41.02]]],[[[-62.32,-40.05],[-62.32,-40.05]]],[[[-62.27,-39.99],[-62.27,-39.99]]],[[[-62.3,-39.99],[-62.3,-39.99]]],[[[-62.27,-39.95],[-62.27,-39.95]]],[[[-62.28,-39.91],[-62.28,-39.91]]],[[[-62.26,-39.87],[-62.26,-39.87]]],[[[-62.27,-39.26],[-62.27,-39.26]]],[[[-62.28,-39.12],[-62.28,-39.12]]],[[[-62.3,-38.97],[-62.3,-38.97]]],[[[-62.31,-39.98],[-62.31,-39.98]]],[[[-62.32,-39.93],[-62.32,-39.93]]],[[[-62.31,-39.91],[-62.31,-39.91]]],[[[-62.25,-39.89],[-62.25,-39.89]]],[[[-62.26,-39.88],[-62.26,-39.88]]],[[[-62.26,-39.87],[-62.26,-39.87]]],[[[-62.25,-39.33],[-62.25,-39.33]]],[[[-62.23,-39.32],[-62.23,-39.32]]],[[[-62.22,-39.26],[-62.22,-39.26]]],[[[-62.23,-39.2],[-62.23,-39.2]]],[[[-62.23,-39.01],[-62.23,-39.01]]],[[[-62.25,-38.97],[-62.25,-38.97]]],[[[-62.26,-38.97],[-62.26,-38.97]]],[[[-62.26,-38.94],[-62.26,-38.94]]],[[[-62.24,-38.94],[-62.24,-38.94]]],[[[-62.23,-38.95],[-62.23,-38.95]]],[[[-62.21,-38.96],[-62.21,-38.96]]],[[[-62.23,-38.95],[-62.23,-38.95]]],[[[-62.22,-38.95],[-62.22,-38.95]]],[[[-62.31,-38.97],[-62.31,-38.97]]],[[[-62.31,-38.97],[-62.31,-38.97]]],[[[-62.31,-38.97],[-62.31,-38.97]]],[[[-62.3,-38.95],[-62.3,-38.95]]],[[[-62.29,-38.97],[-62.29,-38.97]]],[[[-62.27,-38.97],[-62.27,-38.97]]],[[[-62.3,-38.96],[-62.3,-38.96]]],[[[-62.28,-38.95],[-62.28,-38.95]]],[[[-62.27,-38.93],[-62.27,-38.93]]],[[[-62.27,-38.92],[-62.27,-38.92]]],[[[-62.27,-38.9],[-62.27,-38.9]]],[[[-62.31,-38.9],[-62.31,-38.9]]],[[[-62.28,-38.88],[-62.28,-38.88]]],[[[-62.29,-38.89],[-62.29,-38.89]]],[[[-62.31,-38.87],[-62.27,-38.87],[-62.31,-38.87]]],[[[-62.28,-38.87],[-62.28,-38.87]]],[[[-62.26,-38.94],[-62.26,-38.94]]],[[[-62.24,-38.93],[-62.24,-38.93]]],[[[-62.26,-38.91],[-62.26,-38.91]]],[[[-62.24,-38.89],[-62.24,-38.89]]],[[[-62.24,-38.93],[-62.24,-38.93]]],[[[-62.24,-38.92],[-62.24,-38.92]]],[[[-62.23,-38.91],[-62.23,-38.91]]],[[[-62.21,-38.89],[-62.21,-38.89]]],[[[-62.25,-38.89],[-62.25,-38.89]]],[[[-62.24,-38.87],[-62.24,-38.87]]],[[[-62.26,-38.87],[-62.26,-38.87]]],[[[-62.25,-38.87],[-62.25,-38.87]]],[[[-62.25,-38.88],[-62.25,-38.88]]],[[[-62.24,-38.87],[-62.24,-38.87]]],[[[-62.23,-38.87],[-62.23,-38.87]]],[[[-62.24,-38.85],[-62.24,-38.85]]],[[[-62.26,-38.86],[-62.26,-38.86]]],[[[-62.26,-38.86],[-62.26,-38.86]]],[[[-62.25,-38.84],[-62.25,-38.84]]],[[[-62.25,-38.83],[-62.25,-38.83]]],[[[-62.26,-38.83],[-62.26,-38.83]]],[[[-62.23,-38.84],[-62.23,-38.84]]],[[[-62.22,-38.84],[-62.22,-38.84]]],[[[-62.24,-38.82],[-62.24,-38.82]]],[[[-62.24,-38.82],[-62.24,-38.82]]],[[[-62.29,-38.83],[-62.29,-38.83]]],[[[-62.27,-38.83],[-62.27,-38.83]]],[[[-62.28,-38.82],[-62.28,-38.82]]],[[[-62.27,-38.8],[-62.27,-38.8]]],[[[-62.16,-39.0],[-62.16,-39.0]]],[[[-62.16,-38.97],[-62.16,-38.97]]],[[[-62.17,-38.92],[-62.2,-38.96],[-62.17,-38.92]]],[[[-62.19,-38.93],[-62.19,-38.93]]],[[[-62.13,-38.95],[-62.1,-38.97],[-62.15,-38.99],[-62.13,-38.95]]],[[[-62.15,-38.92],[-62.15,-38.92]]],[[[-62.15,-38.92],[-62.15,-38.92]]],[[[-62.15,-38.84],[-62.15,-38.84]]],[[[-62.21,-38.91],[-62.21,-38.91]]],[[[-62.2,-38.89],[-62.2,-38.89]]],[[[-62.2,-38.89],[-62.2,-38.89]]],[[[-62.2,-38.89],[-62.2,-38.89]]],[[[-62.16,-38.86],[-62.16,-38.86]]],[[[-62.19,-38.86],[-62.19,-38.86]]],[[[-62.18,-38.84],[-62.18,-38.84]]],[[[-62.17,-38.83],[-62.17,-38.83]]],[[[-62.15,-38.83],[-62.15,-38.83]]],[[[-62.16,-38.83],[-62.16,-38.83]]],[[[-62.19,-38.83],[-62.19,-38.83]]],[[[-62.21,-38.83],[-62.21,-38.83]]],[[[-62.18,-38.82],[-62.18,-38.82]]],[[[-62.22,-38.82],[-62.22,-38.82]]],[[[-62.04,-40.15],[-62.04,-40.15]]],[[[-62.07,-40.15],[-62.07,-40.15]]],[[[-62.06,-40.15],[-62.06,-40.15]]],[[[-62.06,-40.14],[-62.06,-40.14]]],[[[-62.03,-40.18],[-62.03,-40.18]]],[[[-62.03,-39.33],[-62.03,-39.33]]],[[[-62.01,-39.32],[-62.01,-39.32]]],[[[-61.97,-39.29],[-61.97,-39.29]]],[[[-62.07,-40.14],[-62.07,-40.14]]],[[[-62.09,-39.4],[-62.09,-39.4]]],[[[-62.08,-39.4],[-62.08,-39.4]]],[[[-62.05,-39.23],[-62.05,-39.23]]],[[[-62.15,-39.87],[-62.15,-39.87]]],[[[-62.1,-39.66],[-62.1,-39.66]]],[[[-62.11,-39.67],[-62.11,-39.67]]],[[[-62.14,-39.38],[-62.07,-39.43],[-62.14,-39.38]]],[[[-62.16,-39.87],[-62.16,-39.87]]],[[[-62.19,-39.31],[-62.19,-39.31]]],[[[-62.2,-39.32],[-62.2,-39.32]]],[[[-62.2,-39.31],[-62.2,-39.31]]],[[[-62.16,-39.23],[-62.16,-39.23]]],[[[-62.18,-39.23],[-62.18,-39.23]]],[[[-62.19,-39.17],[-62.19,-39.17]]],[[[-62.11,-39.05],[-62.11,-39.05]]],[[[-62.15,-39.03],[-62.15,-39.03]]],[[[-62.1,-39.03],[-62.1,-39.03]]],[[[-62.13,-39.0],[-62.13,-39.0]]],[[[-62.21,-39.0],[-62.21,-39.0]]],[[[-62.22,-39.0],[-62.22,-39.0]]],[[[-62.22,-39.0],[-62.22,-39.0]]],[[[-62.21,-38.96],[-62.21,-38.96]]],[[[-62.1,-39.39],[-62.1,-39.39]]],[[[-62.14,-39.36],[-62.14,-39.36]]],[[[-62.14,-39.24],[-62.14,-39.24]]],[[[-62.15,-39.23],[-62.15,-39.23]]],[[[-62.03,-39.27],[-62.03,-39.27]]],[[[-62.04,-39.23],[-61.99,-39.28],[-62.04,-39.23]]],[[[-61.97,-39.24],[-61.97,-39.24]]],[[[-62.07,-39.07],[-61.9,-39.13],[-61.89,-39.09],[-61.86,-39.23],[-62.07,-39.15],[-62.07,-39.07]]],[[[-62.18,-39.17],[-62.03,-39.26],[-62.18,-39.17]]],[[[-62.12,-39.09],[-62.12,-39.09]]],[[[-62.13,-39.09],[-62.13,-39.09]]],[[[-62.11,-39.06],[-62.11,-39.06]]],[[[-62.07,-39.15],[-62.07,-39.15]]],[[[-62.08,-39.14],[-62.08,-39.14]]],[[[-62.05,-39.07],[-62.05,-39.07]]],[[[-62.09,-39.06],[-62.09,-39.06]]],[[[-62.04,-39.06],[-62.04,-39.06]]],[[[-62.04,-39.04],[-62.04,-39.04]]],[[[-62.07,-39.02],[-62.07,-39.02]]],[[[-62.06,-39.02],[-62.06,-39.02]]],[[[-62.02,-39.07],[-62.02,-39.07]]],[[[-61.97,-39.07],[-61.97,-39.07]]],[[[-62.02,-39.06],[-62.02,-39.06]]],[[[-62.07,-38.98],[-61.92,-39.07],[-62.07,-39.0],[-62.14,-39.04],[-62.07,-38.98]]],[[[-62.07,-39.01],[-62.07,-39.01]]],[[[-62.07,-39.01],[-62.07,-39.01]]],[[[-62.06,-38.99],[-62.06,-38.99]]],[[[-62.08,-38.97],[-62.08,-38.97]]],[[[-62.09,-38.97],[-62.09,-38.97]]],[[[-62.01,-39.0],[-62.01,-39.0]]],[[[-61.83,-38.98],[-61.83,-38.98]]],[[[-61.84,-38.98],[-61.84,-38.98]]],[[[-61.85,-38.97],[-61.85,-38.97]]],[[[-57.43,-37.73],[-57.43,-37.73]]],[[[-57.41,-37.67],[-57.41,-37.67]]],[[[-57.4,-37.66],[-57.4,-37.66]]],[[[-58.28,-34.27],[-58.28,-34.27]]],[[[-58.46,-34.33],[-58.45,-34.38],[-58.46,-34.33]]],[[[-58.44,-34.33],[-58.44,-34.33]]],[[[-58.47,-34.32],[-58.47,-34.32]]],[[[-58.5,-34.3],[-58.5,-34.3]]],[[[-58.47,-34.3],[-58.47,-34.3]]],[[[-58.47,-34.3],[-58.47,-34.3]]],[[[-58.46,-34.3],[-58.46,-34.3]]],[[[-58.49,-34.29],[-58.49,-34.29]]],[[[-58.46,-34.29],[-58.46,-34.29]]],[[[-58.47,-34.28],[-58.47,-34.28]]],[[[-58.27,-34.25],[-58.27,-34.25]]],[[[-58.28,-34.24],[-58.28,-34.24]]],[[[-58.32,-34.24],[-58.32,-34.24]]],[[[-58.31,-34.24],[-58.31,-34.24]]],[[[-58.33,-34.24],[-58.33,-34.24]]],[[[-58.27,-34.23],[-58.27,-34.23]]],[[[-58.28,-34.23],[-58.28,-34.23]]],[[[-58.28,-34.22],[-58.28,-34.22]]],[[[-58.41,-34.27],[-58.41,-34.27]]],[[[-58.39,-34.23],[-58.39,-34.23]]],[[[-58.34,-34.22],[-58.34,-34.22]]],[[[-58.34,-34.14],[-58.33,-34.2],[-58.34,-34.14]]],[[[-58.31,-34.19],[-58.33,-34.24],[-58.31,-34.19]]],[[[-58.25,-34.2],[-58.25,-34.2]]],[[[-58.26,-34.17],[-58.26,-34.17]]],[[[-58.26,-34.18],[-58.26,-34.18]]],[[[-58.33,-34.15],[-58.33,-34.15]]],[[[-58.33,-34.14],[-58.33,-34.14]]],[[[-58.35,-34.08],[-58.35,-34.08]]],[[[-58.36,-34.06],[-58.36,-34.06]]],[[[-62.31,-38.89],[-62.31,-38.89]]],[[[-62.33,-38.87],[-62.33,-38.87]]],[[[-62.32,-38.87],[-62.32,-38.87]]],[[[-62.33,-38.86],[-62.33,-38.86]]],[[[-62.29,-38.86],[-62.29,-38.86]]],[[[-62.27,-38.86],[-62.27,-38.86]]],[[[-62.28,-38.84],[-62.28,-38.84]]],[[[-62.28,-38.84],[-62.28,-38.84]]],[[[-62.34,-38.84],[-62.34,-38.84]]],[[[-62.32,-38.82],[-62.32,-38.82]]],[[[-62.36,-38.75],[-62.36,-38.75]]],[[[-62.35,-38.72],[-62.35,-38.72]]],[[[-62.34,-38.73],[-62.34,-38.73]]]]}},{"type":"Feature","properties":{"name":"Catamarca"},"geometry":{"type":"Polygon","coordinates":[[[-64.83,-29.56],[-64.97,-29.59],[-64.91,-29.91],[-65.13,-30.07],[-65.41,-30.12],[-65.75,-29.28],[-66.11,-28.94],[-66.4,-28.86],[-66.33,-28.74],[-66.49,-28.64],[-66.58,-28.32],[-67.0,-28.24],[-67.16,-28.38],[-67.65,-28.31],[-67.82,-28.39],[-67.92,-28.12],[-68.1,-28.16],[-68.28,-28.09],[-68.3,-28.02],[-68.45,-28.02],[-68.43,-27.88],[-68.51,-27.8],[-68.49,-27.73],[-69.09,-27.77],[-69.04,-27.59],[-68.94,-27.52],[-68.98,-27.43],[-68.81,-27.3],[-68.87,-27.26],[-68.84,-27.16],[-68.67,-27.1],[-68.57,-27.18],[-68.56,-27.12],[-68.48,-27.13],[-68.48,-27.06],[-68.45,-27.09],[-68.29,-27.04],[-68.26,-26.92],[-68.59,-26.49],[-68.56,-26.29],[-68.38,-26.18],[-68.59,-25.45],[-68.52,-25.38],[-68.51,-25.17],[-67.99,-25.24],[-66.56,-25.27],[-66.56,-25.61],[-66.59,-25.68],[-66.82,-25.74],[-66.8,-25.9],[-66.43,-26.38],[-66.37,-26.4],[-66.21,-26.15],[-66.08,-26.21],[-66.16,-26.59],[-65.86,-26.75],[-65.86,-26.93],[-66.15,-27.24],[-65.99,-27.31],[-65.97,-27.55],[-65.82,-27.85],[-65.75,-27.78],[-65.66,-27.96],[-65.57,-28.0],[-65.37,-27.84],[-65.18,-27.94],[-65.1,-28.47],[-65.18,-28.65],[-65.0,-28.77],[-64.83,-29.05],[-64.89,-29.34],[-64.83,-29.56]]]}},{"type":"Feature","properties":{"name":"Chaco"},"geometry":{"type":"Polygon","coordinates":[[[-58.36,-26.86],[-58.49,-26.92],[-58.51,-27.06],[-58.65,-27.13],[-58.59,-27.24],[-58.62,-27.33],[-58.89,-27.48],[-58.81,-27.78],[-58.89,-28.0],[-61.72,-27.99],[-61.71,-25.66],[-63.43,-25.65],[-62.35,-24.39],[-62.31,-24.09],[-62.18,-24.21],[-61.79,-24.31],[-61.46,-24.63],[-61.22,-24.65],[-60.89,-25.02],[-60.49,-25.2],[-60.24,-25.49],[-60.19,-25.65],[-59.87,-25.81],[-59.67,-26.01],[-59.66,-26.14],[-59.43,-26.15],[-59.36,-26.33],[-59.15,-26.29],[-58.96,-26.39],[-58.36,-26.86]]]}},{"type":"Feature","properties":{"name":"Chubut"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-67.0,-46.0],[-67.0,-46.0]]],[[[-71.65,-46.01],[-71.62,-45.94],[-71.76,-45.85],[-71.8,-45.72],[-71.73,-45.58],[-71.76,-45.56],[-71.47,-45.5],[-71.53,-45.39],[-71.34,-45.32],[-71.33,-45.24],[-71.53,-45.1],[-71.56,-44.98],[-72.04,-44.9],[-72.07,-44.76],[-71.86,-44.8],[-71.47,-44.74],[-71.29,-44.81],[-71.21,-44.75],[-71.2,-44.59],[-71.1,-44.59],[-71.09,-44.53],[-71.17,-44.44],[-71.39,-44.39],[-71.82,-44.42],[-71.83,-44.27],[-71.78,-44.22],[-71.85,-44.11],[-71.77,-44.11],[-71.65,-43.95],[-71.75,-43.79],[-71.58,-43.65],[-71.78,-43.54],[-71.87,-43.55],[-71.85,-43.48],[-71.93,-43.45],[-71.91,-43.32],[-71.73,-43.31],[-71.73,-43.2],[-71.93,-43.1],[-72.14,-42.9],[-72.13,-42.73],[-72.18,-42.69],[-72.01,-42.49],[-72.03,-42.41],[-72.13,-42.38],[-72.17,-42.14],[-72.05,-42.11],[-71.92,-42.19],[-71.78,-42.15],[-71.73,-42.11],[-71.76,-42.0],[-65.07,-42.0],[-64.88,-42.18],[-64.46,-42.24],[-64.6,-42.43],[-64.13,-42.43],[-64.04,-42.36],[-64.08,-42.26],[-64.38,-42.24],[-63.82,-42.07],[-63.75,-42.09],[-63.61,-42.31],[-63.6,-42.51],[-63.66,-42.3],[-63.58,-42.61],[-63.63,-42.77],[-63.73,-42.81],[-64.15,-42.87],[-64.26,-42.75],[-64.21,-42.62],[-64.49,-42.5],[-64.67,-42.51],[-64.98,-42.65],[-65.01,-42.78],[-64.31,-42.98],[-64.98,-43.26],[-65.05,-43.4],[-65.33,-43.66],[-65.3,-43.93],[-65.19,-44.03],[-65.31,-44.2],[-65.21,-44.37],[-65.33,-44.46],[-65.28,-44.52],[-65.37,-44.51],[-65.36,-44.59],[-65.64,-44.67],[-65.73,-44.82],[-65.7,-44.88],[-65.52,-44.93],[-65.69,-45.06],[-66.19,-44.98],[-66.28,-45.06],[-66.51,-45.09],[-66.53,-45.14],[-66.47,-45.17],[-66.6,-45.14],[-66.52,-45.22],[-66.97,-45.27],[-67.35,-45.63],[-67.37,-45.79],[-67.59,-46.0],[-71.65,-46.01]]],[[[-66.7,-45.25],[-66.7,-45.25]]],[[[-66.52,-45.18],[-66.52,-45.18]]],[[[-66.52,-45.17],[-66.52,-45.17]]],[[[-66.57,-45.16],[-66.57,-45.16]]],[[[-66.4,-45.2],[-66.4,-45.2]]],[[[-66.41,-45.19],[-66.41,-45.19]]],[[[-66.51,-45.18],[-66.51,-45.18]]],[[[-66.49,-45.18],[-66.49,-45.18]]],[[[-66.52,-45.18],[-66.52,-45.18]]],[[[-66.5,-45.18],[-66.5,-45.18]]],[[[-66.51,-45.17],[-66.51,-45.17]]],[[[-66.5,-45.17],[-66.5,-45.17]]],[[[-66.36,-45.15],[-66.36,-45.15]]],[[[-66.51,-45.11],[-66.51,-45.11]]],[[[-66.5,-45.11],[-66.5,-45.11]]],[[[-66.42,-45.09],[-66.42,-45.09]]],[[[-66.41,-45.09],[-66.41,-45.09]]],[[[-66.41,-45.09],[-66.41,-45.09]]],[[[-66.34,-45.07],[-66.34,-45.07]]],[[[-66.35,-45.06],[-66.35,-45.06]]],[[[-66.58,-45.16],[-66.58,-45.16]]],[[[-66.05,-45.13],[-66.05,-45.13]]],[[[-66.09,-45.12],[-66.09,-45.12]]],[[[-66.01,-45.11],[-66.01,-45.11]]],[[[-66.02,-45.11],[-66.02,-45.11]]],[[[-66.03,-45.1],[-66.03,-45.1]]],[[[-66.01,-45.08],[-65.96,-45.11],[-66.01,-45.08]]],[[[-66.04,-45.09],[-66.04,-45.09]]],[[[-66.03,-45.09],[-66.03,-45.09]]],[[[-66.34,-45.05],[-66.34,-45.05]]],[[[-65.96,-45.05],[-65.96,-45.05]]],[[[-65.97,-45.05],[-65.97,-45.05]]],[[[-65.86,-45.05],[-65.86,-45.05]]],[[[-65.84,-45.05],[-65.84,-45.05]]],[[[-65.94,-45.12],[-65.94,-45.12]]],[[[-65.97,-45.1],[-65.97,-45.1]]],[[[-65.81,-45.06],[-65.81,-45.06]]],[[[-65.72,-45.05],[-65.72,-45.05]]],[[[-65.4,-45.1],[-65.4,-45.1]]],[[[-65.62,-45.05],[-65.62,-45.05]]],[[[-65.6,-45.04],[-65.6,-45.04]]],[[[-65.48,-45.0],[-65.48,-45.0]]],[[[-65.56,-45.0],[-65.56,-45.0]]],[[[-65.57,-44.99],[-65.57,-44.99]]],[[[-65.56,-44.96],[-65.56,-44.96]]],[[[-65.64,-44.77],[-65.64,-44.77]]],[[[-65.67,-44.77],[-65.67,-44.77]]],[[[-65.92,-45.05],[-65.92,-45.05]]],[[[-65.89,-45.05],[-65.89,-45.05]]],[[[-65.96,-45.04],[-65.96,-45.04]]],[[[-65.88,-45.04],[-65.88,-45.04]]],[[[-65.76,-45.04],[-65.76,-45.04]]],[[[-65.87,-45.03],[-65.87,-45.03]]],[[[-65.86,-45.03],[-65.86,-45.03]]],[[[-65.98,-45.03],[-65.98,-45.03]]],[[[-66.32,-45.07],[-66.32,-45.07]]],[[[-66.29,-45.05],[-66.29,-45.05]]],[[[-66.11,-45.0],[-66.11,-45.0]]],[[[-66.21,-45.0],[-66.21,-45.0]]],[[[-66.16,-44.99],[-66.16,-44.99]]],[[[-66.1,-44.99],[-66.1,-44.99]]],[[[-66.18,-44.99],[-66.18,-44.99]]],[[[-65.65,-44.77],[-65.65,-44.77]]],[[[-65.26,-44.26],[-65.26,-44.26]]],[[[-65.28,-43.72],[-65.28,-43.72]]],[[[-64.51,-42.42],[-64.51,-42.42]]],[[[-64.6,-42.42],[-64.6,-42.42]]],[[[-63.65,-42.32],[-63.61,-42.36],[-63.65,-42.32]]],[[[-64.0,-42.0],[-64.0,-42.0]]]]}},{"type":"Feature","properties":{"name":"Ciudad de Buenos Aires"},"geometry":{"type":"Polygon","coordinates":[[[-58.34,-34.63],[-58.46,-34.71],[-58.53,-34.62],[-58.45,-34.53],[-58.34,-34.63]]]}},{"type":"Feature","properties":{"name":"C\u00f3rdoba"},"geometry":{"type":"Polygon","coordinates":[[[-63.39,-35.0],[-65.11,-35.0],[-65.15,-33.2],[-65.05,-33.14],[-64.89,-32.53],[-64.93,-32.32],[-65.21,-32.32],[-65.29,-32.05],[-65.66,-31.88],[-65.78,-31.89],[-65.77,-31.03],[-65.41,-30.12],[-65.13,-30.07],[-64.91,-29.91],[-64.97,-29.59],[-64.33,-29.5],[-63.98,-29.55],[-63.96,-29.62],[-63.81,-29.57],[-63.72,-29.66],[-63.47,-29.66],[-63.45,-29.78],[-62.78,-29.81],[-62.76,-29.94],[-62.56,-30.08],[-62.56,-30.29],[-62.18,-30.33],[-62.13,-30.49],[-61.98,-30.65],[-61.83,-30.67],[-62.13,-31.61],[-62.25,-31.7],[-62.19,-32.12],[-61.93,-32.46],[-61.89,-32.61],[-61.95,-32.67],[-61.79,-32.79],[-61.8,-33.02],[-62.87,-34.37],[-63.39,-34.38],[-63.39,-35.0]]]}},{"type":"Feature","properties":{"name":"Corrientes"},"geometry":{"type":"Polygon","coordinates":[[[-57.81,-30.76],[-58.02,-30.6],[-58.07,-30.42],[-58.2,-30.29],[-58.58,-30.17],[-59.02,-30.22],[-59.24,-30.36],[-59.55,-30.33],[-59.6,-30.43],[-59.69,-30.29],[-59.56,-30.03],[-59.68,-29.83],[-59.62,-29.75],[-59.61,-29.4],[-59.49,-29.23],[-59.21,-29.06],[-59.08,-28.64],[-59.1,-28.21],[-59.06,-28.13],[-58.93,-28.11],[-58.87,-28.03],[-58.81,-27.78],[-58.89,-27.48],[-58.61,-27.3],[-58.2,-27.25],[-57.72,-27.33],[-57.51,-27.44],[-57.0,-27.46],[-56.85,-27.6],[-56.74,-27.56],[-56.71,-27.46],[-56.59,-27.45],[-56.39,-27.61],[-56.28,-27.41],[-56.04,-27.31],[-56.06,-27.46],[-55.85,-27.76],[-55.82,-27.94],[-55.62,-28.13],[-55.77,-28.25],[-55.67,-28.33],[-55.69,-28.42],[-55.87,-28.36],[-55.89,-28.48],[-56.01,-28.51],[-56.02,-28.61],[-56.28,-28.79],[-56.42,-29.07],[-56.6,-29.13],[-56.68,-29.32],[-56.97,-29.64],[-57.28,-29.82],[-57.33,-29.98],[-57.47,-30.12],[-57.64,-30.18],[-57.64,-30.34],[-57.89,-30.51],[-57.81,-30.76]]]}},{"type":"Feature","properties":{"name":"Entre R\u00edos"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-60.25,-33.26],[-60.32,-33.17],[-60.52,-33.1],[-60.72,-32.76],[-60.76,-32.5],[-60.74,-32.31],[-60.67,-32.31],[-60.73,-32.17],[-60.66,-32.08],[-60.72,-32.0],[-60.66,-31.73],[-60.43,-31.68],[-60.14,-31.43],[-60.1,-31.29],[-59.63,-30.7],[-59.71,-30.41],[-59.66,-30.35],[-59.6,-30.43],[-59.55,-30.33],[-59.24,-30.36],[-59.07,-30.23],[-58.68,-30.16],[-58.26,-30.25],[-58.07,-30.42],[-58.01,-30.6],[-57.83,-30.71],[-57.8,-30.82],[-57.82,-30.92],[-57.91,-30.95],[-57.87,-31.05],[-57.98,-31.39],[-58.08,-31.46],[-57.98,-31.58],[-58.04,-31.75],[-58.21,-31.87],[-58.14,-32.0],[-58.18,-32.16],[-58.1,-32.26],[-58.2,-32.46],[-58.08,-33.0],[-58.26,-33.1],[-58.43,-33.08],[-58.42,-33.29],[-58.53,-33.49],[-58.55,-33.7],[-58.45,-33.82],[-58.42,-34.0],[-58.66,-34.04],[-59.01,-33.83],[-59.24,-33.8],[-59.26,-33.72],[-59.44,-33.73],[-59.52,-33.63],[-59.62,-33.69],[-60.25,-33.26]]],[[[-58.4,-33.98],[-58.4,-33.98]]],[[[-58.39,-33.95],[-58.36,-33.99],[-58.39,-33.95]]]]}},{"type":"Feature","properties":{"name":"Formosa"},"geometry":{"type":"Polygon","coordinates":[[[-62.35,-24.11],[-62.34,-22.46],[-62.24,-22.54],[-62.27,-22.6],[-61.99,-23.02],[-61.69,-23.28],[-61.51,-23.35],[-61.5,-23.42],[-61.17,-23.55],[-60.98,-23.81],[-60.6,-23.9],[-60.33,-24.05],[-60.05,-24.01],[-59.48,-24.34],[-59.12,-24.62],[-58.67,-24.83],[-58.49,-24.85],[-58.33,-25.0],[-58.23,-24.93],[-57.99,-25.08],[-57.87,-25.08],[-57.56,-25.44],[-57.56,-25.56],[-57.76,-25.68],[-57.73,-25.72],[-57.81,-25.76],[-57.8,-25.83],[-57.88,-25.94],[-57.85,-26.01],[-58.16,-26.18],[-58.11,-26.24],[-58.23,-26.47],[-58.19,-26.64],[-58.25,-26.64],[-58.25,-26.75],[-58.36,-26.81],[-58.32,-26.87],[-58.38,-26.86],[-58.96,-26.39],[-59.15,-26.29],[-59.36,-26.33],[-59.43,-26.15],[-59.66,-26.14],[-59.67,-26.01],[-59.87,-25.81],[-60.19,-25.65],[-60.24,-25.49],[-60.49,-25.2],[-60.89,-25.02],[-61.22,-24.65],[-61.46,-24.63],[-61.79,-24.31],[-62.35,-24.11]]]}},{"type":"Feature","properties":{"name":"Jujuy"},"geometry":{"type":"Polygon","coordinates":[[[-67.22,-23.7],[-66.99,-23.0],[-67.18,-22.81],[-67.01,-22.65],[-67.03,-22.54],[-66.78,-22.44],[-66.74,-22.24],[-66.29,-22.09],[-66.22,-21.78],[-66.08,-21.83],[-66.05,-21.92],[-65.92,-21.93],[-65.75,-22.11],[-65.09,-22.08],[-65.2,-22.1],[-65.34,-22.5],[-65.34,-22.59],[-65.27,-22.63],[-65.24,-22.93],[-65.01,-23.02],[-65.03,-23.28],[-64.87,-23.5],[-64.67,-23.46],[-64.44,-23.63],[-64.36,-23.51],[-64.17,-23.51],[-64.16,-24.21],[-64.28,-24.41],[-64.53,-24.49],[-64.62,-24.61],[-64.83,-24.48],[-64.93,-24.6],[-65.08,-24.56],[-65.19,-24.46],[-65.34,-24.5],[-65.63,-24.38],[-65.83,-24.0],[-66.0,-23.95],[-65.99,-23.52],[-66.15,-23.43],[-66.36,-23.39],[-66.34,-23.99],[-66.48,-24.21],[-66.65,-24.18],[-67.0,-23.96],[-67.01,-23.86],[-67.22,-23.7]]]}},{"type":"Feature","properties":{"name":"La Pampa"},"geometry":{"type":"Polygon","coordinates":[[[-63.39,-39.32],[-63.63,-39.24],[-64.0,-39.01],[-64.46,-38.86],[-65.15,-38.8],[-65.37,-38.85],[-65.55,-38.78],[-65.66,-38.83],[-66.07,-38.73],[-66.44,-38.75],[-66.6,-38.67],[-66.64,-38.53],[-67.15,-38.36],[-67.19,-38.21],[-67.64,-38.21],[-67.75,-38.07],[-67.9,-38.0],[-67.72,-37.82],[-67.79,-37.66],[-68.24,-37.58],[-68.24,-36.17],[-68.3,-36.17],[-68.3,-36.0],[-65.1,-36.0],[-65.11,-35.0],[-63.39,-35.0],[-63.39,-39.32]]]}},{"type":"Feature","properties":{"name":"La Rioja"},"geometry":{"type":"Polygon","coordinates":[[[-65.78,-31.89],[-65.96,-31.89],[-66.08,-31.97],[-66.31,-31.94],[-66.34,-32.0],[-66.68,-31.92],[-66.85,-31.78],[-66.87,-31.64],[-67.06,-31.55],[-67.1,-31.39],[-67.06,-31.09],[-67.12,-31.02],[-67.08,-30.89],[-67.18,-30.72],[-67.55,-30.41],[-67.69,-30.19],[-68.33,-29.68],[-68.69,-29.6],[-69.0,-29.62],[-69.03,-29.52],[-68.96,-29.44],[-68.95,-29.29],[-69.01,-29.15],[-68.9,-29.06],[-68.95,-28.91],[-69.35,-28.44],[-69.59,-28.38],[-69.46,-28.18],[-69.39,-28.23],[-69.34,-28.16],[-69.24,-27.97],[-69.17,-27.97],[-69.09,-27.77],[-68.49,-27.73],[-68.51,-27.8],[-68.43,-27.88],[-68.45,-28.02],[-68.3,-28.02],[-68.28,-28.09],[-68.1,-28.16],[-67.92,-28.12],[-67.82,-28.39],[-67.65,-28.31],[-67.16,-28.38],[-67.0,-28.24],[-66.58,-28.32],[-66.49,-28.64],[-66.33,-28.74],[-66.4,-28.86],[-66.11,-28.94],[-65.83,-29.18],[-65.41,-30.12],[-65.77,-31.03],[-65.78,-31.89]]]}},{"type":"Feature","properties":{"name":"Mendoza"},"geometry":{"type":"Polygon","coordinates":[[[-68.24,-37.58],[-68.43,-37.55],[-68.5,-37.45],[-68.69,-37.44],[-68.76,-37.37],[-69.02,-37.36],[-69.04,-37.25],[-69.15,-37.18],[-69.49,-37.17],[-69.73,-37.07],[-69.76,-36.87],[-70.12,-36.57],[-70.22,-36.34],[-70.38,-36.29],[-70.43,-36.1],[-70.37,-35.99],[-70.42,-35.97],[-70.37,-35.93],[-70.43,-35.9],[-70.31,-35.81],[-70.38,-35.79],[-70.42,-35.64],[-70.37,-35.52],[-70.45,-35.46],[-70.43,-35.32],[-70.58,-35.27],[-70.53,-35.19],[-70.37,-35.17],[-70.37,-35.01],[-70.25,-34.8],[-70.31,-34.75],[-70.01,-34.41],[-70.03,-34.29],[-69.8,-34.22],[-69.87,-34.13],[-69.82,-34.02],[-69.91,-33.96],[-69.86,-33.89],[-69.9,-33.77],[-69.77,-33.34],[-69.92,-33.24],[-70.0,-33.32],[-70.04,-33.27],[-70.09,-33.05],[-69.99,-32.9],[-70.11,-32.8],[-70.16,-32.6],[-70.06,-32.63],[-69.98,-32.54],[-69.7,-32.52],[-69.71,-32.33],[-69.59,-32.14],[-69.42,-32.07],[-69.32,-32.09],[-69.16,-31.97],[-69.02,-32.11],[-68.93,-32.1],[-68.93,-32.32],[-68.66,-32.33],[-68.47,-32.1],[-68.29,-32.14],[-68.06,-32.07],[-67.96,-32.07],[-67.82,-32.21],[-67.51,-32.2],[-67.38,-32.34],[-67.19,-32.77],[-67.16,-33.43],[-67.0,-33.69],[-66.74,-33.95],[-66.81,-34.39],[-66.55,-34.9],[-66.51,-35.12],[-66.63,-36.0],[-68.3,-36.0],[-68.3,-36.17],[-68.24,-36.17],[-68.24,-37.58]]]}},{"type":"Feature","properties":{"name":"Misiones"},"geometry":{"type":"Polygon","coordinates":[[[-55.62,-28.13],[-55.82,-27.94],[-55.85,-27.76],[-56.06,-27.46],[-56.03,-27.32],[-55.73,-27.44],[-55.6,-27.34],[-55.62,-27.18],[-55.46,-27.1],[-55.42,-27.0],[-55.14,-26.95],[-55.14,-26.87],[-54.96,-26.79],[-54.94,-26.69],[-54.81,-26.67],[-54.8,-26.55],[-54.62,-26.22],[-54.68,-26.0],[-54.61,-25.96],[-54.59,-25.83],[-54.66,-25.68],[-54.59,-25.67],[-54.6,-25.59],[-54.43,-25.7],[-54.39,-25.6],[-54.18,-25.59],[-54.21,-25.55],[-54.11,-25.5],[-54.1,-25.62],[-54.02,-25.57],[-53.95,-25.64],[-53.89,-25.62],[-53.82,-25.79],[-53.84,-25.97],[-53.59,-26.26],[-53.71,-26.39],[-53.75,-26.72],[-53.66,-26.87],[-53.79,-27.04],[-53.8,-27.14],[-53.95,-27.16],[-54.09,-27.3],[-54.18,-27.26],[-54.28,-27.45],[-54.41,-27.41],[-54.52,-27.51],[-54.58,-27.46],[-54.62,-27.55],[-54.67,-27.51],[-54.67,-27.57],[-54.78,-27.59],[-54.81,-27.53],[-54.94,-27.78],[-55.08,-27.79],[-55.03,-27.85],[-55.2,-27.86],[-55.44,-28.09],[-55.5,-28.08],[-55.55,-28.16],[-55.62,-28.13]]]}},{"type":"Feature","properties":{"name":"Neuqu\u00e9n"},"geometry":{"type":"Polygon","coordinates":[[[-71.85,-41.03],[-71.91,-40.97],[-71.86,-40.88],[-71.97,-40.73],[-71.84,-40.63],[-71.83,-40.58],[-71.89,-40.56],[-71.83,-40.42],[-71.74,-40.44],[-71.66,-40.36],[-71.82,-40.23],[-71.83,-40.1],[-71.67,-40.1],[-71.69,-40.03],[-71.59,-39.91],[-71.69,-39.85],[-71.7,-39.59],[-71.5,-39.64],[-71.46,-39.58],[-71.53,-39.53],[-71.37,-39.28],[-71.43,-38.93],[-71.1,-38.75],[-70.93,-38.76],[-70.83,-38.6],[-70.98,-38.43],[-71.04,-38.12],[-70.99,-38.09],[-71.18,-37.86],[-71.13,-37.82],[-71.21,-37.65],[-71.13,-37.59],[-71.12,-37.47],[-71.22,-37.27],[-71.11,-37.21],[-71.09,-37.11],[-71.22,-36.98],[-71.09,-36.94],[-71.18,-36.84],[-71.11,-36.68],[-71.01,-36.69],[-71.04,-36.48],[-70.89,-36.47],[-70.88,-36.4],[-70.71,-36.43],[-70.71,-36.27],[-70.57,-36.13],[-70.45,-36.17],[-70.41,-36.1],[-70.36,-36.32],[-70.22,-36.34],[-70.12,-36.57],[-69.76,-36.87],[-69.77,-36.98],[-69.7,-37.09],[-69.49,-37.17],[-69.15,-37.18],[-69.04,-37.25],[-69.02,-37.36],[-68.76,-37.37],[-68.69,-37.44],[-68.5,-37.45],[-68.43,-37.55],[-68.24,-37.58],[-68.25,-38.69],[-68.13,-38.75],[-68.01,-38.98],[-68.29,-38.98],[-68.57,-39.09],[-68.99,-39.5],[-69.23,-39.56],[-69.51,-39.81],[-69.93,-39.95],[-70.0,-40.05],[-69.95,-40.18],[-70.06,-40.25],[-70.06,-40.37],[-70.18,-40.42],[-70.17,-40.48],[-70.53,-40.5],[-70.98,-40.65],[-71.12,-40.76],[-71.03,-40.9],[-71.14,-41.05],[-71.29,-41.1],[-71.54,-41.02],[-71.85,-41.03]]]}},{"type":"Feature","properties":{"name":"R\u00edo Negro"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-65.0,-42.0],[-65.0,-42.0]]],[[[-65.02,-41.45],[-65.02,-41.45]]],[[[-65.05,-41.41],[-65.05,-41.41]]],[[[-65.0,-41.0],[-65.0,-41.0]]],[[[-64.84,-40.78],[-64.84,-40.78]]],[[[-64.84,-40.76],[-65.02,-40.76],[-65.16,-40.95],[-65.1,-41.34],[-64.99,-41.52],[-65.07,-42.0],[-71.76,-42.01],[-71.8,-41.84],[-71.75,-41.79],[-71.89,-41.61],[-71.82,-41.58],[-71.91,-41.36],[-71.9,-41.26],[-71.83,-41.27],[-71.89,-41.17],[-71.84,-41.02],[-71.29,-41.1],[-71.14,-41.05],[-71.03,-40.9],[-71.12,-40.76],[-70.98,-40.65],[-70.53,-40.5],[-70.17,-40.48],[-70.18,-40.42],[-70.06,-40.37],[-70.06,-40.25],[-69.95,-40.18],[-70.0,-40.05],[-69.93,-39.95],[-69.51,-39.81],[-69.23,-39.56],[-68.99,-39.5],[-68.57,-39.09],[-68.29,-38.98],[-68.01,-38.98],[-68.13,-38.75],[-68.25,-38.69],[-68.24,-37.58],[-67.79,-37.66],[-67.72,-37.82],[-67.9,-38.0],[-67.75,-38.07],[-67.64,-38.21],[-67.19,-38.21],[-67.15,-38.36],[-66.64,-38.53],[-66.6,-38.67],[-66.47,-38.74],[-66.07,-38.73],[-65.66,-38.83],[-65.55,-38.78],[-65.37,-38.85],[-65.15,-38.8],[-64.46,-38.86],[-64.0,-39.01],[-63.63,-39.24],[-63.39,-39.32],[-63.39,-40.71],[-62.95,-40.82],[-62.79,-41.02],[-63.12,-41.16],[-63.79,-41.16],[-64.54,-40.86],[-64.88,-40.83],[-64.78,-40.79],[-64.84,-40.76]]],[[[-64.85,-40.77],[-64.85,-40.77]]],[[[-64.84,-40.76],[-64.84,-40.76]]]]}},{"type":"Feature","properties":{"name":"Salta"},"geometry":{"type":"Polygon","coordinates":[[[-68.48,-25.16],[-68.34,-25.11],[-68.43,-24.91],[-68.57,-24.8],[-68.5,-24.6],[-68.43,-24.61],[-68.39,-24.49],[-68.31,-24.49],[-68.26,-24.4],[-67.32,-24.03],[-67.22,-23.7],[-67.01,-23.86],[-67.0,-23.96],[-66.65,-24.18],[-66.48,-24.21],[-66.34,-23.99],[-66.33,-23.72],[-66.39,-23.54],[-66.34,-23.37],[-65.99,-23.52],[-66.0,-23.95],[-65.83,-24.0],[-65.57,-24.43],[-65.33,-24.5],[-65.19,-24.46],[-65.08,-24.56],[-64.91,-24.6],[-64.83,-24.48],[-64.66,-24.61],[-64.53,-24.49],[-64.28,-24.41],[-64.16,-24.2],[-64.17,-23.51],[-64.36,-23.51],[-64.44,-23.63],[-64.67,-23.46],[-64.87,-23.5],[-65.03,-23.28],[-65.01,-23.03],[-65.24,-22.93],[-65.27,-22.63],[-65.34,-22.59],[-65.19,-22.09],[-64.99,-22.08],[-64.62,-22.21],[-64.54,-22.29],[-64.53,-22.44],[-64.41,-22.54],[-64.44,-22.64],[-64.32,-22.88],[-64.24,-22.56],[-63.93,-22.0],[-63.72,-22.0],[-63.68,-22.05],[-63.67,-22.0],[-62.8,-22.0],[-62.78,-22.17],[-62.33,-22.46],[-62.35,-24.39],[-63.48,-25.71],[-64.03,-25.7],[-64.04,-25.76],[-64.29,-25.72],[-64.49,-26.23],[-64.79,-26.2],[-64.94,-26.28],[-65.26,-26.19],[-65.32,-26.07],[-65.54,-26.09],[-65.67,-26.12],[-65.71,-26.36],[-66.18,-26.14],[-66.38,-26.4],[-66.51,-26.3],[-66.8,-25.89],[-66.81,-25.74],[-66.59,-25.68],[-66.56,-25.62],[-66.56,-25.27],[-67.99,-25.24],[-68.48,-25.16]]]}},{"type":"Feature","properties":{"name":"San Juan"},"geometry":{"type":"Polygon","coordinates":[[[-70.13,-32.57],[-70.15,-32.47],[-70.24,-32.43],[-70.22,-32.33],[-70.32,-32.27],[-70.3,-32.14],[-70.39,-32.04],[-70.29,-32.05],[-70.21,-31.96],[-70.46,-31.84],[-70.57,-31.47],[-70.5,-31.12],[-70.45,-31.09],[-70.4,-31.17],[-70.27,-31.04],[-70.32,-30.93],[-70.2,-30.49],[-70.12,-30.43],[-70.15,-30.35],[-70.02,-30.4],[-69.9,-30.35],[-69.89,-30.22],[-69.81,-30.15],[-69.97,-30.09],[-69.88,-29.73],[-70.02,-29.33],[-69.95,-29.19],[-69.79,-29.13],[-69.69,-28.77],[-69.73,-28.68],[-69.62,-28.38],[-69.35,-28.44],[-68.95,-28.91],[-68.9,-29.06],[-69.01,-29.15],[-68.95,-29.29],[-68.96,-29.44],[-69.03,-29.52],[-69.0,-29.62],[-68.69,-29.6],[-68.33,-29.68],[-67.69,-30.18],[-67.55,-30.41],[-67.18,-30.72],[-67.08,-30.89],[-67.12,-31.02],[-67.06,-31.09],[-67.1,-31.39],[-67.05,-31.55],[-66.87,-31.64],[-66.85,-31.78],[-66.72,-31.89],[-67.39,-31.87],[-67.36,-32.26],[-67.29,-32.36],[-67.45,-32.31],[-67.51,-32.2],[-67.82,-32.21],[-67.96,-32.07],[-68.06,-32.07],[-68.29,-32.14],[-68.47,-32.1],[-68.66,-32.33],[-68.93,-32.32],[-68.93,-32.1],[-69.02,-32.11],[-69.16,-31.97],[-69.32,-32.09],[-69.42,-32.07],[-69.59,-32.14],[-69.71,-32.33],[-69.7,-32.52],[-69.98,-32.54],[-70.07,-32.63],[-70.13,-32.57]]]}},{"type":"Feature","properties":{"name":"San Luis"},"geometry":{"type":"Polygon","coordinates":[[[-65.11,-35.0],[-65.1,-36.0],[-66.63,-36.0],[-66.51,-35.34],[-66.54,-34.95],[-66.81,-34.39],[-66.74,-33.95],[-67.0,-33.69],[-67.16,-33.43],[-67.19,-32.77],[-67.37,-32.38],[-67.29,-32.36],[-67.36,-32.26],[-67.39,-31.87],[-66.71,-31.89],[-66.34,-32.0],[-66.31,-31.94],[-66.08,-31.97],[-65.96,-31.89],[-65.66,-31.88],[-65.29,-32.06],[-65.21,-32.32],[-64.92,-32.32],[-64.88,-32.57],[-65.05,-33.14],[-65.15,-33.2],[-65.11,-35.0]]]}},{"type":"Feature","properties":{"name":"Santa Cruz"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-68.44,-52.4],[-68.44,-52.4]]],[[[-68.44,-52.39],[-68.44,-52.39]]],[[[-69.11,-51.66],[-69.11,-51.66]]],[[[-69.11,-51.64],[-69.11,-51.64]]],[[[-71.69,-52.0],[-71.69,-52.0]]],[[[-69.13,-51.65],[-69.13,-51.65]]],[[[-69.12,-51.65],[-69.12,-51.65]]],[[[-69.16,-51.63],[-69.16,-51.63]]],[[[-69.1,-51.6],[-69.1,-51.6]]],[[[-69.07,-51.59],[-69.07,-51.59]]],[[[-69.08,-51.59],[-69.08,-51.59]]],[[[-69.01,-51.58],[-69.01,-51.58]]],[[[-71.7,-46.46],[-71.75,-46.23],[-71.92,-46.14],[-71.72,-46.09],[-71.65,-46.01],[-67.59,-46.0],[-67.62,-46.22],[-67.44,-46.55],[-67.13,-46.7],[-66.79,-47.0],[-65.94,-47.08],[-65.74,-47.2],[-65.74,-47.51],[-65.9,-47.76],[-65.76,-47.95],[-65.94,-47.95],[-65.97,-48.05],[-65.89,-48.1],[-66.12,-48.12],[-66.34,-48.28],[-66.33,-48.36],[-66.75,-48.47],[-66.87,-48.59],[-67.13,-48.68],[-67.22,-48.84],[-67.49,-48.96],[-67.67,-49.22],[-67.6,-49.3],[-67.73,-49.78],[-67.84,-49.95],[-68.06,-50.08],[-68.35,-50.12],[-68.88,-50.33],[-69.08,-50.56],[-69.13,-50.9],[-69.43,-51.09],[-69.17,-50.98],[-68.95,-51.55],[-69.13,-51.61],[-69.35,-51.55],[-69.6,-51.62],[-69.25,-51.6],[-69.12,-51.64],[-69.24,-51.7],[-68.96,-51.62],[-68.71,-51.97],[-68.35,-52.32],[-68.42,-52.39],[-68.42,-52.33],[-68.84,-52.28],[-69.19,-52.15],[-69.49,-52.15],[-70.0,-52.0],[-72.01,-51.98],[-71.95,-51.87],[-72.3,-51.7],[-72.33,-51.59],[-72.44,-51.58],[-72.32,-51.47],[-72.31,-51.37],[-72.37,-51.34],[-72.26,-51.25],[-72.41,-51.11],[-72.37,-51.02],[-72.27,-51.03],[-72.25,-50.88],[-72.35,-50.75],[-72.29,-50.66],[-72.49,-50.6],[-72.6,-50.68],[-72.73,-50.61],[-73.2,-50.82],[-73.15,-50.65],[-73.36,-50.53],[-73.37,-50.37],[-73.44,-50.34],[-73.36,-50.3],[-73.45,-50.24],[-73.43,-50.18],[-73.52,-50.15],[-73.45,-49.96],[-73.56,-49.92],[-73.49,-49.81],[-73.22,-49.67],[-73.05,-49.47],[-73.08,-49.28],[-73.04,-49.28],[-73.13,-49.27],[-73.15,-49.19],[-72.99,-48.99],[-72.92,-48.94],[-72.8,-48.97],[-72.53,-48.8],[-72.59,-48.49],[-72.44,-48.51],[-72.35,-48.39],[-72.38,-48.35],[-72.23,-48.32],[-72.33,-48.21],[-72.31,-48.14],[-72.44,-48.06],[-72.43,-47.97],[-72.53,-47.94],[-72.47,-47.81],[-72.52,-47.74],[-72.44,-47.75],[-72.31,-47.6],[-72.34,-47.46],[-72.0,-47.29],[-72.02,-47.2],[-71.86,-47.23],[-71.86,-47.13],[-71.96,-47.08],[-71.88,-47.01],[-71.96,-46.97],[-71.96,-46.82],[-71.65,-46.69],[-71.7,-46.46]]],[[[-69.22,-50.99],[-69.22,-50.99]]],[[[-69.21,-50.97],[-69.21,-50.97]]],[[[-69.19,-50.95],[-69.19,-50.95]]],[[[-69.03,-51.58],[-69.03,-51.58]]],[[[-69.03,-51.57],[-69.03,-51.57]]],[[[-69.03,-51.56],[-69.03,-51.56]]],[[[-69.0,-51.0],[-69.0,-51.0]]],[[[-66.32,-48.36],[-66.32,-48.36]]],[[[-71.7,-46.46],[-71.7,-46.46]]],[[[-66.26,-48.24],[-66.26,-48.24]]],[[[-66.25,-48.24],[-66.25,-48.24]]],[[[-66.09,-48.13],[-66.09,-48.13]]],[[[-66.1,-48.13],[-66.1,-48.13]]],[[[-65.94,-48.12],[-65.94,-48.12]]],[[[-65.95,-48.12],[-65.95,-48.12]]],[[[-65.89,-48.11],[-65.89,-48.11]]],[[[-66.01,-48.11],[-66.01,-48.11]]],[[[-65.99,-48.11],[-65.99,-48.11]]],[[[-65.98,-48.11],[-65.98,-48.11]]],[[[-65.9,-48.07],[-65.9,-48.07]]],[[[-65.93,-48.02],[-65.93,-48.02]]],[[[-65.89,-48.08],[-65.89,-48.08]]],[[[-65.86,-47.96],[-65.86,-47.96]]],[[[-65.87,-47.96],[-65.87,-47.96]]],[[[-65.87,-47.95],[-65.87,-47.95]]],[[[-65.93,-48.02],[-65.93,-48.02]]],[[[-65.9,-48.0],[-65.9,-48.0]]],[[[-65.89,-47.94],[-65.89,-47.94]]],[[[-65.86,-47.95],[-65.86,-47.95]]],[[[-65.73,-47.92],[-65.73,-47.92]]],[[[-65.74,-47.92],[-65.74,-47.92]]],[[[-65.76,-47.91],[-65.76,-47.91]]],[[[-65.71,-47.91],[-65.71,-47.91]]],[[[-65.87,-47.8],[-65.87,-47.8]]],[[[-65.88,-47.76],[-65.88,-47.76]]],[[[-65.84,-47.74],[-65.84,-47.74]]]]}},{"type":"Feature","properties":{"name":"Santa Fe"},"geometry":{"type":"Polygon","coordinates":[[[-62.89,-34.38],[-61.79,-33.0],[-61.79,-32.79],[-61.95,-32.67],[-61.89,-32.61],[-61.93,-32.46],[-62.19,-32.12],[-62.25,-31.7],[-62.13,-31.61],[-61.83,-30.67],[-61.98,-30.65],[-62.13,-30.49],[-61.72,-27.99],[-58.88,-28.0],[-58.91,-28.1],[-59.05,-28.12],[-59.1,-28.21],[-59.08,-28.64],[-59.21,-29.06],[-59.49,-29.23],[-59.61,-29.4],[-59.62,-29.75],[-59.68,-29.83],[-59.56,-30.03],[-59.71,-30.41],[-59.63,-30.7],[-60.1,-31.29],[-60.14,-31.44],[-60.43,-31.68],[-60.67,-31.74],[-60.66,-31.91],[-60.72,-32.0],[-60.66,-32.08],[-60.73,-32.17],[-60.67,-32.31],[-60.74,-32.31],[-60.76,-32.5],[-60.72,-32.76],[-60.52,-33.1],[-60.32,-33.17],[-60.25,-33.26],[-60.46,-33.63],[-60.87,-33.55],[-61.72,-34.38],[-62.89,-34.38]]]}},{"type":"Feature","properties":{"name":"Santiago del Estero"},"geometry":{"type":"Polygon","coordinates":[[[-64.83,-29.56],[-64.89,-29.34],[-64.83,-29.05],[-65.0,-28.77],[-65.18,-28.65],[-65.1,-28.47],[-65.19,-27.92],[-65.05,-27.87],[-64.96,-27.76],[-65.04,-27.59],[-64.97,-27.52],[-65.04,-27.49],[-64.99,-27.34],[-64.88,-27.31],[-64.73,-26.83],[-64.62,-26.8],[-64.59,-26.66],[-64.5,-26.68],[-64.49,-26.23],[-64.29,-25.72],[-64.04,-25.76],[-64.03,-25.7],[-63.48,-25.71],[-63.43,-25.65],[-61.71,-25.66],[-61.72,-27.99],[-62.13,-30.48],[-62.18,-30.33],[-62.56,-30.29],[-62.56,-30.08],[-62.76,-29.94],[-62.78,-29.81],[-63.45,-29.78],[-63.47,-29.66],[-63.72,-29.66],[-63.81,-29.57],[-63.96,-29.62],[-63.98,-29.55],[-64.33,-29.5],[-64.83,-29.56]]]}},{"type":"Feature","properties":{"name":"Tierra del Fuego"},"geometry":{"type":"MultiPolygon","coordinates":[[[[-66.55,-55.06],[-66.55,-55.06]]],[[[-66.3,-55.01],[-66.3,-55.01]]],[[[-65.59,-54.95],[-65.59,-54.95]]],[[[-64.61,-54.92],[-64.61,-54.92]]],[[[-65.79,-54.91],[-65.79,-54.91]]],[[[-67.38,-54.91],[-67.38,-54.91]]],[[[-67.4,-54.89],[-67.4,-54.89]]],[[[-67.43,-54.89],[-67.54,-54.89],[-67.43,-54.89]]],[[[-67.35,-54.89],[-67.35,-54.89]]],[[[-67.38,-54.89],[-67.38,-54.89]]],[[[-64.67,-54.89],[-64.67,-54.89]]],[[[-67.28,-54.88],[-67.28,-54.88]]],[[[-64.48,-54.88],[-64.48,-54.88]]],[[[-64.17,-54.88],[-64.17,-54.88]]],[[[-64.5,-54.86],[-64.5,-54.86]]],[[[-64.15,-54.85],[-64.15,-54.85]]],[[[-64.52,-54.88],[-64.52,-54.88]]],[[[-67.5,-54.87],[-67.5,-54.87]]],[[[-68.45,-54.86],[-68.45,-54.86]]],[[[-68.25,-54.84],[-68.25,-54.84]]],[[[-64.39,-54.85],[-64.39,-54.85]]],[[[-64.32,-54.84],[-64.32,-54.84]]],[[[-64.34,-54.71],[-64.15,-54.77],[-64.05,-54.73],[-64.05,-54.78],[-63.79,-54.73],[-63.95,-54.81],[-63.95,-54.77],[-64.06,-54.78],[-64.22,-54.86],[-64.23,-54.78],[-64.31,-54.79],[-64.45,-54.88],[-64.47,-54.82],[-64.7,-54.92],[-64.66,-54.85],[-64.76,-54.84],[-64.7,-54.78],[-64.51,-54.8],[-64.54,-54.72],[-64.39,-54.75],[-64.37,-54.81],[-64.34,-54.71]]],[[[-64.09,-54.75],[-64.09,-54.75]]],[[[-64.1,-54.74],[-64.1,-54.74]]],[[[-64.09,-54.74],[-64.09,-54.74]]],[[[-64.26,-54.73],[-64.26,-54.73]]],[[[-64.25,-54.73],[-64.25,-54.73]]],[[[-64.25,-54.71],[-64.25,-54.71]]],[[[-64.24,-54.7],[-64.24,-54.7]]],[[[-64.25,-54.69],[-64.25,-54.69]]],[[[-64.26,-54.67],[-64.26,-54.67]]],[[[-64.26,-54.67],[-64.26,-54.67]]],[[[-64.13,-54.65],[-64.13,-54.65]]],[[[-64.58,-54.81],[-64.58,-54.81]]],[[[-64.55,-54.79],[-64.55,-54.79]]],[[[-66.29,-54.51],[-65.8,-54.65],[-65.12,-54.66],[-65.38,-54.94],[-65.43,-54.89],[-65.65,-54.97],[-65.74,-54.9],[-65.98,-54.9],[-66.0,-55.0],[-66.31,-54.99],[-66.45,-55.06],[-67.28,-54.87],[-67.69,-54.89],[-68.25,-54.8],[-68.32,-54.81],[-68.26,-54.84],[-68.61,-54.89],[-68.61,-52.65],[-68.29,-52.95],[-68.2,-53.14],[-68.31,-53.06],[-68.51,-53.18],[-68.5,-53.27],[-68.13,-53.34],[-67.99,-53.58],[-67.68,-53.8],[-67.78,-53.83],[-67.68,-53.79],[-67.55,-53.84],[-67.56,-53.91],[-67.32,-54.05],[-66.74,-54.26],[-66.47,-54.48],[-66.29,-54.51]]],[[[-68.48,-54.86],[-68.48,-54.86]]],[[[-68.61,-52.65],[-68.61,-52.65]]],[[[-68.61,-52.65],[-68.61,-52.65]]],[[[-68.61,-52.65],[-68.61,-52.65]]],[[[-68.61,-52.65],[-68.61,-52.65]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.65,-52.63],[-68.65,-52.63]]],[[[-68.66,-52.63],[-68.66,-52.63]]],[[[-68.66,-52.63],[-68.66,-52.63]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.67,-52.62],[-68.67,-52.62]]],[[[-68.68,-52.62],[-68.68,-52.62]]],[[[-68.68,-52.61],[-68.68,-52.61]]],[[[-68.68,-52.61],[-68.68,-52.61]]],[[[-68.68,-52.61],[-68.68,-52.61]]],[[[-68.68,-52.61],[-68.68,-52.61]]],[[[-68.69,-52.61],[-68.69,-52.61]]],[[[-68.69,-52.61],[-68.69,-52.61]]],[[[-68.69,-52.61],[-68.69,-52.61]]],[[[-68.69,-52.61],[-68.69,-52.61]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.7,-52.6],[-68.7,-52.6]]],[[[-68.71,-52.6],[-68.71,-52.6]]],[[[-68.71,-52.6],[-68.71,-52.6]]],[[[-68.71,-52.6],[-68.71,-52.6]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.71,-52.59],[-68.71,-52.59]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.72,-52.58],[-68.72,-52.58]]],[[[-68.74,-52.56],[-68.74,-52.56]]],[[[-68.74,-52.56],[-68.74,-52.56]]],[[[-68.74,-52.55],[-68.74,-52.55]]],[[[-68.74,-52.55],[-68.74,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.75,-52.55],[-68.75,-52.55]]],[[[-68.77,-52.54],[-68.77,-52.54]]],[[[-68.76,-52.54],[-68.76,-52.54]]],[[[-68.77,-52.54],[-68.77,-52.54]]]]}},{"type":"Feature","properties":{"name":"Tucum\u00e1n"},"geometry":{"type":"Polygon","coordinates":[[[-66.08,-26.22],[-65.71,-26.36],[-65.67,-26.12],[-65.34,-26.07],[-65.26,-26.19],[-64.95,-26.28],[-64.79,-26.2],[-64.5,-26.22],[-64.5,-26.68],[-64.59,-26.66],[-64.62,-26.8],[-64.73,-26.83],[-64.88,-27.31],[-64.99,-27.34],[-65.04,-27.49],[-64.97,-27.55],[-65.04,-27.59],[-64.96,-27.76],[-65.05,-27.87],[-65.15,-27.87],[-65.18,-27.94],[-65.37,-27.84],[-65.55,-28.0],[-65.66,-27.96],[-65.75,-27.78],[-65.82,-27.85],[-65.97,-27.55],[-65.99,-27.31],[-66.15,-27.24],[-65.86,-26.93],[-65.86,-26.75],[-66.16,-26.59],[-66.08,-26.22]]]}}]};
-
-let geojsonLayer;
-let provinceLayers = {};
-
-(function(data) {
-    geojsonLayer = L.geoJSON(data, {
-      style: feature => {
-        const rawName = feature.properties.name || feature.properties.NAME_1 || '';
-        const name = rawName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const val = DATOS_PROVINCIAS[name];
-        return {
-          fillColor: getColor(val),
-          fillOpacity: 0.75,
-          color: '#58a6ff',
-          weight: 1,
-          opacity: 0.4,
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const rawName = feature.properties.name || feature.properties.NAME_1 || '';
-        const name = rawName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        provinceLayers[name] = layer;
-
-        layer.on('mouseover', function(e) {
-          this.setStyle({ weight: 2, opacity: 0.9, fillOpacity: 0.9 });
-          const val = DATOS_PROVINCIAS[name];
-          document.getElementById('info-title').textContent = name;
-          document.getElementById('info-value').textContent = val !== undefined ? val : 'Sin datos';
-          document.getElementById('info-panel').classList.add('visible');
-          highlightSidebar(name);
-        });
-
-        layer.on('mouseout', function(e) {
-          geojsonLayer.resetStyle(this);
-          document.getElementById('info-panel').classList.remove('visible');
-          highlightSidebar(null);
-        });
-
-        layer.on('click', function(e) {
-          map.fitBounds(this.getBounds(), { padding: [40, 40] });
-        });
-      }
-    }).addTo(map);
-
-    buildSidebar(data);
-  })
-  })(GEOJSON_DATA);
-
-// Ciudades
-let citiesVisible = true;
-let cityMarkers = [];
-
-CIUDADES.forEach(c => {
-  const r = Math.max(4, Math.min(14, Math.log(c.pop / 5000) * 1.5));
-  const marker = L.circleMarker([c.lat, c.lng], {
-    radius: r,
-    fillColor: '#f0c060',
-    color: '#0d1117',
-    weight: 1.5,
-    fillOpacity: 0.85,
-  });
-
-  const val = DATOS_PROVINCIAS[c.prov];
-  marker.bindPopup(`
-    <div class="popup-inner">
-      <div class="popup-title">${c.ciudad}</div>
-      <div class="popup-province">${c.prov}</div>
-      <div class="popup-kv">
-        <span class="popup-key">Población</span>
-        <span class="popup-val">${c.pop.toLocaleString('es-AR')}</span>
-      </div>
-      <div class="popup-kv">
-        <span class="popup-key">${LABEL_VALOR} (provincia)</span>
-        <span class="popup-val">${val !== undefined ? val : '—'}</span>
-      </div>
-    </div>
-  `, { maxWidth: 240 });
-
-  marker.addTo(map);
-  cityMarkers.push(marker);
+// Draw provinces
+const gProv = document.getElementById('provinces');
+const pathEls = {};
+PATHS.forEach(({name, d}) => {
+  const val = DATOS[name];
+  const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+  el.setAttribute('d', d);
+  el.setAttribute('fill', getColor(val));
+  el.setAttribute('stroke', '#58a6ff');
+  el.setAttribute('stroke-width', '0.6');
+  el.setAttribute('stroke-opacity', '0.5');
+  el.setAttribute('class', 'prov-path');
+  el.setAttribute('data-name', name);
+  el.addEventListener('mousemove', e => showTip(e, name, null, val));
+  el.addEventListener('mouseleave', hideTip);
+  el.addEventListener('click', () => highlightProv(name));
+  gProv.appendChild(el);
+  pathEls[name] = el;
 });
 
-function toggleCities() {
-  citiesVisible = !citiesVisible;
-  const btn = document.getElementById('toggle-btn');
-  cityMarkers.forEach(m => {
-    if (citiesVisible) m.addTo(map);
-    else map.removeLayer(m);
-  });
-  btn.textContent = citiesVisible ? '🏙 Ocultar ciudades' : '🏙 Mostrar ciudades';
-  btn.classList.toggle('off', !citiesVisible);
+// Draw cities
+const gCities = document.getElementById('cities');
+let citiesOn = true;
+CITIES.forEach(({n, cx, cy, r, pop}) => {
+  const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circle.setAttribute('cx', cx);
+  circle.setAttribute('cy', cy);
+  circle.setAttribute('r', r);
+  circle.setAttribute('fill', '#e8c04a');
+  circle.setAttribute('stroke', '#0d1117');
+  circle.setAttribute('stroke-width', '1');
+  circle.setAttribute('class', 'city-dot');
+  circle.setAttribute('data-name', n);
+  circle.addEventListener('mousemove', e => showTip(e, n, pop, undefined));
+  circle.addEventListener('mouseleave', hideTip);
+  gCities.appendChild(circle);
+});
+
+// Tooltip
+const tip = document.getElementById('tooltip');
+function showTip(e, name, pop, val) {
+  let html = `<div class="tt-title">${name}</div>`;
+  if (pop !== null && pop !== undefined) {
+    html += `<div class="tt-sub">Ciudad</div>`;
+    html += `<div class="tt-row"><span class="tt-key">Población</span><span class="tt-val">${pop.toLocaleString('es-AR')}</span></div>`;
+  } else {
+    html += `<div class="tt-sub">Provincia</div>`;
+    html += `<div class="tt-row"><span class="tt-key">${LABEL}</span><span class="tt-val">${val !== undefined ? val : '—'}</span></div>`;
+  }
+  tip.innerHTML = html;
+  tip.style.opacity = '1';
+  moveTip(e);
 }
+function moveTip(e) {
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top = (e.clientY - 10) + 'px';
+}
+function hideTip() { tip.style.opacity = '0'; }
+document.addEventListener('mousemove', e => { if(tip.style.opacity==='1') moveTip(e); });
 
 // Sidebar
-function buildSidebar(data) {
-  const container = document.getElementById('province-list');
-  const sorted = Object.entries(DATOS_PROVINCIAS).sort((a,b) => b[1]-a[1]);
+const listEl = document.getElementById('prov-list');
+const sorted = Object.entries(DATOS).sort((a,b) => b[1]-a[1]);
+sorted.forEach(([name, val]) => {
+  const item = document.createElement('div');
+  item.className = 'prov-item';
+  item.dataset.name = name;
+  item.innerHTML = `<div class="prov-dot" style="background:${getColor(val)}"></div><span class="prov-name">${name}</span><span class="prov-val">${val}</span>`;
+  item.onclick = () => highlightProv(name);
+  listEl.appendChild(item);
+});
 
-  sorted.forEach(([name, val]) => {
-    const item = document.createElement('div');
-    item.className = 'prov-item';
-    item.dataset.name = name;
-    item.innerHTML = `
-      <div class="prov-dot" style="background:${getColor(val)}"></div>
-      <span class="prov-name">${name}</span>
-      <span class="prov-value">${val}</span>
-    `;
-    item.onclick = () => {
-      const layer = provinceLayers[name];
-      if (layer) {
-        map.fitBounds(layer.getBounds(), { padding: [60, 60] });
-        document.querySelectorAll('.prov-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-      }
-    };
-    container.appendChild(item);
+function highlightProv(name) {
+  document.querySelectorAll('.prov-item').forEach(i => i.classList.toggle('active', i.dataset.name === name));
+  document.querySelectorAll('.prov-item.active').forEach(i => i.scrollIntoView({block:'nearest'}));
+  Object.entries(pathEls).forEach(([n, el]) => {
+    el.setAttribute('stroke-opacity', n === name ? '1' : '0.5');
+    el.setAttribute('stroke-width', n === name ? '1.5' : '0.6');
   });
 }
 
-function highlightSidebar(name) {
-  document.querySelectorAll('.prov-item').forEach(i => {
-    i.classList.toggle('active', i.dataset.name === name);
-    if (i.dataset.name === name) i.scrollIntoView({ block: 'nearest' });
-  });
-}
-
-function filterProvincias() {
-  const q = document.getElementById('search-input').value.toLowerCase();
+function filterList() {
+  const q = document.getElementById('search').value.toLowerCase();
   document.querySelectorAll('.prov-item').forEach(i => {
     i.style.display = i.dataset.name.toLowerCase().includes(q) ? '' : 'none';
   });
 }
+
+function toggleCities() {
+  citiesOn = !citiesOn;
+  gCities.style.display = citiesOn ? '' : 'none';
+  document.getElementById('btn-cities').textContent = citiesOn ? '🏙 Ocultar ciudades' : '🏙 Mostrar ciudades';
+}
+
+// Pan & zoom
+const svg = document.getElementById('map');
+let vx=0,vy=0,vw=660,vh=860,dragging=false,startX,startY,startVx,startVy;
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.12 : 0.89;
+  const rect = svg.getBoundingClientRect();
+  const mx = (e.clientX-rect.left)/rect.width*vw+vx;
+  const my = (e.clientY-rect.top)/rect.height*vh+vy;
+  vw*=factor; vh*=factor;
+  vx=mx-((e.clientX-rect.left)/rect.width*vw);
+  vy=my-((e.clientY-rect.top)/rect.height*vh);
+  svg.setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
+},{passive:false});
+svg.addEventListener('mousedown', e => {dragging=true;startX=e.clientX;startY=e.clientY;startVx=vx;startVy=vy;});
+window.addEventListener('mousemove', e => {
+  if(!dragging)return;
+  const rect=svg.getBoundingClientRect();
+  vx=startVx-(e.clientX-startX)/rect.width*vw;
+  vy=startVy-(e.clientY-startY)/rect.height*vh;
+  svg.setAttribute('viewBox',`${vx} ${vy} ${vw} ${vh}`);
+});
+window.addEventListener('mouseup', ()=>dragging=false);
 </script>
 </body>
 </html>
